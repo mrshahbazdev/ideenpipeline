@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.platform' => \App\Http\Middleware\AuthenticatePlatform::class,
             'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
             'validate.subdomain' => \App\Http\Middleware\ValidateSubdomain::class,
+            'admin.only' => \App\Http\Middleware\AdminOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
