@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 
 class IdeasController extends Controller
 {
@@ -166,6 +167,7 @@ class IdeasController extends Controller
             ], 500);
         }
     }
+
     /**
      * Quick status change (Admin only)
      */
