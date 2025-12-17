@@ -6,8 +6,13 @@ use Illuminate\Support\Facades\Route;
 
 // Home - show all tenants (no subdomain)
 Route::get('/', function () {
-    return view('tenant-home');
-})->name('tenant.home');
+    // Get current tenant from middleware
+    $tenant = tenant();
+    
+    return view('welcome', [
+        'tenant' => $tenant
+    ]);
+})->name('home');
 
 // Tenant routes with middleware (works with or without subdomain)
 Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenant.')->group(function () {
