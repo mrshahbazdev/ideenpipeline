@@ -76,6 +76,14 @@ class Idea extends Model
     }
 
     /**
+     * Get user's vote
+     */
+    public function getUserVote(User $user)
+    {
+        return $this->votes()->where('user_id', $user->id)->first();
+    }
+
+    /**
      * Get status badge color
      */
     public function getStatusBadgeClass(): string
@@ -101,6 +109,21 @@ class Idea extends Model
             'high' => 'bg-orange-100 text-orange-800',
             'urgent' => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800',
+        };
+    }
+
+    /**
+     * Get status icon
+     */
+    public function getStatusIcon(): string
+    {
+        return match($this->status) {
+            'pending' => 'fa-clock',
+            'in-review' => 'fa-eye',
+            'approved' => 'fa-check-circle',
+            'rejected' => 'fa-times-circle',
+            'implemented' => 'fa-rocket',
+            default => 'fa-circle',
         };
     }
 }
