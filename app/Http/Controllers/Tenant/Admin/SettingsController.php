@@ -30,13 +30,13 @@ class SettingsController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $validated = $request->validate([
-            'subdomain' => ['required', 'string', 'max:50', 'unique:tenants,subdomain,' . $tenant->id],
-            'status' => ['required', 'in:active,expired,suspended'],
-            'expires_at' => ['nullable', 'date'],
-        ]);
+        // $validated = $request->validate([
+        //     'subdomain' => ['required', 'string', 'max:50', 'unique:tenants,subdomain,' . $tenant->id],
+        //     'status' => ['required', 'in:active,expired,suspended'],
+        //     'expires_at' => ['nullable', 'date'],
+        // ]);
 
-        $tenant->update($validated);
+        //$tenant->update($validated);
 
         \Log::info('Tenant settings updated', [
             'admin_id' => Auth::id(),

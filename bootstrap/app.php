@@ -32,12 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
             $tenant = $request->attributes->get('tenant');
             
             if ($tenant) {
-                return route('tenant.login', ['tenantId' => $tenant->id]);
+                return route('login');
             }
 
             $tenantId = $request->route('tenantId');
             if ($tenantId) {
-                return route('tenant.login', ['tenantId' => $tenantId]);
+                return route('login');
             }
 
             return route('home');
@@ -51,7 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     $tenantId = $request->route('tenantId');
                     
                     if ($tenantId) {
-                        return redirect()->guest(route('tenant.login', ['tenantId' => $tenantId]));
+                       return redirect()->route('login');
                     }
                 }
                 
