@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Arr; // ✅ Add this for Laravel 11
 use Carbon\Carbon;
 
 class TenantController extends Controller
@@ -118,7 +119,7 @@ class TenantController extends Controller
             
             Log::error('Tenant creation failed', [
                 'error' => $e->getMessage(),
-                'data' => array_except($validated ?? [], ['admin_password', 'admin_password_hash']),
+                'data' => Arr::except($validated ?? [], ['admin_password', 'admin_password_hash']), // ✅ Fixed
             ]);
 
             return response()->json([
@@ -281,6 +282,8 @@ class TenantController extends Controller
         try {
             $tenant = Tenant::findOrFail($tenantId);
 
+            $oldStatus = $tenant->status;
+            
             $tenant->status = $validated['status'];
             
             if (isset($validated['expires_at'])) {
@@ -291,7 +294,7 @@ class TenantController extends Controller
 
             Log::info('Tenant status updated', [
                 'tenant_id' => $tenantId,
-                'old_status' => $tenant->getOriginal('status'),
+                'old_status' => $oldStatus,
                 'new_status' => $tenant->status,
             ]);
 
@@ -379,11 +382,12 @@ class TenantController extends Controller
 
             return response()->json([
                 'status' => 'ok',
-                'tool' => 'CRM Tool',
+                'tool' => 'CRM Tool - Innovation Pipeline',
                 'domain' => config('app.url'),
                 'timestamp' => now()->toIso8601String(),
                 'database' => 'connected',
                 'architecture' => 'Single Database Multi-Tenancy',
+                'laravel_version' => app()->version(),
                 'stats' => $stats,
             ]);
 
@@ -409,6 +413,6 @@ class TenantController extends Controller
         
         $expectedToken = config('app.platform_api_token', 'test-token-12345');
         
-        return $token === $expectedToken;
+        return hash_equals($expectedToken, $token ?? ''); // ✅ Use hash_equals for security
     }
 }
