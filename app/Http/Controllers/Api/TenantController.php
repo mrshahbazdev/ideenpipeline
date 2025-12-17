@@ -23,16 +23,25 @@ class TenantController extends Controller
             'subscription_id' => 'required',
             'user_id' => 'required',
             'admin_name' => 'required|string',
-            'admin_email' => 'required|email|unique:users,email',
+            'admin_email' => 'required|email',
             'admin_password' => 'required|string|min:8',
             'package_name' => 'required|string',
             'starts_at' => 'required|date',
-            'expires_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after:starts_at',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $startsAt = \Carbon\Carbon::parse($validated['starts_at']);
+            $expiresAt = isset($validated['expires_at']) 
+                ? \Carbon\Carbon::parse($validated['expires_at'])
+                : null;
+
+            // Generate proper domain based on environment
+            $baseDomain = config('app.base_domain', 'ideenpipeline.de');
+            $domain = $validated['subdomain'] . '.' . $baseDomain;
+
             // Create tenant record
             $tenant = Tenant::create([
                 'id' => $validated['tenant_id'],
@@ -42,13 +51,13 @@ class TenantController extends Controller
                 'admin_email' => $validated['admin_email'],
                 'package_name' => $validated['package_name'],
                 'subdomain' => $validated['subdomain'],
-                'domain' => $validated['subdomain'] . '.local:8001',
-                'starts_at' => $validated['starts_at'],
-                'expires_at' => $validated['expires_at'] ?? null,
+                'domain' => $domain, // ← Fixed: Use production domain
+                'starts_at' => $startsAt,
+                'expires_at' => $expiresAt,
                 'status' => 'active',
             ]);
 
-            // Create admin user for this tenant
+            // Create admin user
             $user = User::withoutGlobalScope('tenant')->create([
                 'tenant_id' => $tenant->id,
                 'name' => $validated['admin_name'],
@@ -59,6 +68,12 @@ class TenantController extends Controller
             ]);
 
             DB::commit();
+
+            \Log::info('Tenant created successfully', [
+                'tenant_id' => $tenant->id,
+                'subdomain' => $tenant->subdomain,
+                'domain' => $tenant->domain,
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -73,10 +88,9 @@ class TenantController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-
+            
             \Log::error('Tenant creation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([

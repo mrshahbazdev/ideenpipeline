@@ -12,13 +12,13 @@
             <div class="mb-8">
                 <div class="text-6xl mb-4">🚫</div>
                 <h1 class="text-4xl font-bold text-gray-900 mb-4">
-                    Subdomain Not Found
+                    Tenant Not Found
                 </h1>
                 <p class="text-lg text-gray-600 mb-2">
-                    The subdomain <span class="font-mono text-indigo-600">{{ request()->getHost() }}</span> does not exist.
+                    The subdomain <span class="font-mono text-indigo-600">{{ $subdomain }}</span> does not exist in this CRM tool.
                 </p>
                 <p class="text-sm text-gray-500">
-                    This tenant has either been deactivated or never existed.
+                    This tenant may have been deactivated or never existed.
                 </p>
             </div>
 
@@ -31,11 +31,11 @@
                     </li>
                     <li class="flex items-start">
                         <span class="mr-2">✓</span>
-                        <span>Visit the main platform to create a subscription</span>
+                        <span>Contact your administrator</span>
                     </li>
                     <li class="flex items-start">
                         <span class="mr-2">✓</span>
-                        <span>Contact your administrator if you believe this is an error</span>
+                        <span>Visit the main platform to check your subscriptions</span>
                     </li>
                 </ul>
             </div>
@@ -45,15 +45,15 @@
                    class="block w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
                     🏠 Go to Main Platform
                 </a>
-                <a href="https://ideenpipeline.de/tools" 
+                <a href="/" 
                    class="block w-full bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
-                    🔍 Browse Available Tools
+                    🔍 View All Tenants
                 </a>
             </div>
 
             <div class="mt-8 text-xs text-gray-400">
-                <p>Error Code: SUBDOMAIN_NOT_FOUND</p>
-                <p>Host: {{ request()->getHost() }}</p>
+                <p>Error: TENANT_NOT_FOUND</p>
+                <p>Requested: {{ $host }}</p>
             </div>
         </div>
     </div>

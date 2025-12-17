@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Subscription; // ← Add this line
+use App\Models\Tenant;  // CRM tool mein Tenant model hai
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,25 +18,33 @@ class ValidateSubdomain
         $host = $request->getHost();
         $subdomain = $this->extractSubdomain($host);
 
-        // If no subdomain or is main domain, continue
-        if (!$subdomain || $subdomain === 'www') {
+        // If no subdomain or accessing by IP, skip validation
+        if (!$subdomain || $this->isIpAddress($host)) {
             return $next($request);
         }
 
-        // Check if subdomain exists in subscriptions
-        $subscription = Subscription::where('subdomain', $subdomain)
+        // Check if subdomain exists in tenants
+        $tenant = Tenant::where('subdomain', $subdomain)
             ->where('status', 'active')
-            ->where('is_tenant_active', true)
             ->first();
 
-        if (!$subscription) {
+        if (!$tenant) {
             // Invalid subdomain - show 404
-            abort(404, 'Subdomain not found. This tenant does not exist or has been deactivated.');
+            return response()->view('errors.subdomain-not-found', [
+                'subdomain' => $subdomain,
+                'host' => $host,
+            ], 404);
         }
 
-        // Valid subdomain - attach to request for later use
-        $request->attributes->set('subscription', $subscription);
-        $request->attributes->set('tenant_id', $subscription->tenant_id);
+        if (!$tenant->isActive()) {
+            return response()->view('errors.tenant-expired', [
+                'tenant' => $tenant,
+            ], 403);
+        }
+
+        // Valid subdomain - attach to request
+        $request->attributes->set('tenant', $tenant);
+        $request->attributes->set('tenant_id', $tenant->id);
 
         return $next($request);
     }
@@ -46,7 +54,15 @@ class ValidateSubdomain
      */
     private function extractSubdomain(string $host): ?string
     {
-        // Get base domain from config or env
+        // Remove port if present
+        $host = explode(':', $host)[0];
+        
+        // For local development (localhost, 127.0.0.1)
+        if ($this->isLocalHost($host)) {
+            return null;
+        }
+        
+        // Get base domain from config
         $baseDomain = config('app.base_domain', 'ideenpipeline.de');
         
         // Remove base domain
@@ -57,9 +73,30 @@ class ValidateSubdomain
             return null;
         }
         
-        // If subdomain has multiple parts (e.g., testing.subdomain), get first part
+        // Get first part only (in case of multi-level subdomains)
         $parts = explode('.', $subdomain);
         
         return $parts[0] ?? null;
+    }
+
+    /**
+     * Check if host is localhost
+     */
+    private function isLocalHost(string $host): bool
+    {
+        return in_array($host, [
+            'localhost',
+            '127.0.0.1',
+            '::1',
+        ]);
+    }
+
+    /**
+     * Check if host is IP address
+     */
+    private function isIpAddress(string $host): bool
+    {
+        $host = explode(':', $host)[0]; // Remove port
+        return filter_var($host, FILTER_VALIDATE_IP) !== false;
     }
 }

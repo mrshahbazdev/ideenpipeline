@@ -1,44 +1,24 @@
 <?php
 
+use App\Http\Controllers\Tenant\Auth\LoginController;
+use App\Http\Controllers\Tenant\DashboardController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\User\ToolController;
-use App\Http\Controllers\User\SubscriptionController;
-use App\Models\Subscription;
 
-// Subdomain routes
-Route::domain('{subdomain}.ideenpipeline.de')->group(function () {
-    Route::middleware(['web'])->group(function () {
-        Route::get('/', function ($subdomain) {
-            // Validate subdomain
-            $subscription = Subscription::where('subdomain', $subdomain)
-                ->where('status', 'active')
-                ->where('is_tenant_active', true)
-                ->first();
+// Home - show all tenants (no subdomain)
+Route::get('/', function () {
+    return view('tenant-home');
+})->name('tenant.home');
 
-            if (!$subscription) {
-                abort(404, 'This subdomain does not exist or is inactive.');
-            }
-
-            // Redirect to tenant
-            return redirect($subscription->package->tool->api_url . '/tenant/' . $subscription->tenant_id . '/login');
-        })->name('subdomain.home');
-    });
-});
-
-// Main domain routes
-Route::domain('ideenpipeline.de')->group(function () {
-    // Your existing routes...
-    Route::get('/', function () {
-        return view('welcome');
-    });
+// Tenant routes with middleware (works with or without subdomain)
+Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenant.')->group(function () {
     
+    // Login routes
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    
+    // Protected routes
     Route::middleware(['auth'])->group(function () {
-        Route::get('/dashboard', function () {
-            return view('dashboard');
-        })->name('dashboard');
-        
-        Route::get('/tools', [ToolController::class, 'index'])->name('tools.index');
-        Route::get('/tools/{tool}', [ToolController::class, 'show'])->name('tools.show');
-        Route::post('/subscribe', [SubscriptionController::class, 'subscribe'])->name('subscribe');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     });
 });

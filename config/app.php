@@ -14,6 +14,7 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+    'base_domain' => env('BASE_DOMAIN', 'ideenpipeline.de'),
 
     /*
     |--------------------------------------------------------------------------

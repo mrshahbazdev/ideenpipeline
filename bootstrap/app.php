@@ -12,16 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Apply subdomain validation to web routes
         $middleware->web(append: [
             \App\Http\Middleware\ValidateSubdomain::class,
         ]);
+        
         $middleware->alias([
-            'platform.auth' => \App\Http\Middleware\VerifyPlatformToken::class,
-            'tenant.check' => \App\Http\Middleware\CheckTenantStatus::class,
+            'auth.platform' => \App\Http\Middleware\AuthenticatePlatform::class,
             'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,
             'validate.subdomain' => \App\Http\Middleware\ValidateSubdomain::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
