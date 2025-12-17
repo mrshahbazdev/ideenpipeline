@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    Auth\LoginController,
-    Auth\RegisterController,
+    Tenant\Auth\LoginController,
+    Tenant\Auth\RegisterController,
     TenantController,
     HomeController
 };
