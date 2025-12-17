@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 class Team extends Model
 {
@@ -38,11 +39,6 @@ class Team extends Model
                 $builder->where('tenant_id', $tenant->id);
             }
         });
-
-        // Auto-update member count when members added/removed
-        static::saved(function ($team) {
-            $team->updateMemberCount();
-        });
     }
 
     /**
@@ -60,7 +56,8 @@ class Team extends Model
     {
         return $this->belongsToMany(User::class, 'team_user')
             ->withTimestamps()
-            ->withPivot('joined_at');
+            ->withPivot('joined_at')
+            ->using(TeamUserPivot::class); // ✅ Use custom pivot
     }
 
     /**

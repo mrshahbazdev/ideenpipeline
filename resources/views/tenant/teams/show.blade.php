@@ -251,9 +251,17 @@
                                     <!-- Join Date -->
                                     <p class="text-xs text-gray-500 mt-3">
                                         <i class="fas fa-calendar-check mr-1"></i>
-                                        Joined {{ $member->pivot->joined_at->format('M d, Y') }}
-                                        <span class="text-gray-400">({{ $member->pivot->joined_at->diffForHumans() }})</span>
+                                        @if($member->pivot->joined_at instanceof \Carbon\Carbon)
+                                            Joined {{ $member->pivot->joined_at->format('M d, Y') }}
+                                            <span class="text-gray-400">({{ $member->pivot->joined_at->diffForHumans() }})</span>
+                                        @elseif(is_string($member->pivot->joined_at))
+                                            Joined {{ \Carbon\Carbon::parse($member->pivot->joined_at)->format('M d, Y') }}
+                                            <span class="text-gray-400">({{ \Carbon\Carbon::parse($member->pivot->joined_at)->diffForHumans() }})</span>
+                                        @else
+                                            Joined recently
+                                        @endif
                                     </p>
+
                                 </div>
                             </div>
                         @endforeach
@@ -308,7 +316,13 @@
                                 <span class="font-semibold">{{ $member->name }}</span> joined the team
                             </p>
                             <p class="text-xs text-gray-500 mt-1">
-                                {{ $member->pivot->joined_at->format('M d, Y \a\t g:i A') }}
+                                @if($member->pivot->joined_at instanceof \Carbon\Carbon)
+                                    {{ $member->pivot->joined_at->format('M d, Y \a\t g:i A') }}
+                                @elseif(is_string($member->pivot->joined_at))
+                                    {{ \Carbon\Carbon::parse($member->pivot->joined_at)->format('M d, Y \a\t g:i A') }}
+                                @else
+                                    Recently
+                                @endif
                             </p>
                         </div>
                     </div>
