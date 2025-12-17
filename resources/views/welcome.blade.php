@@ -108,6 +108,9 @@
                         </form>
                     @else
                         @if($tenant)
+                            <a href="{{ route('tenant.register', ['tenantId' => $tenant->id]) }}" class="text-gray-700 hover:text-indigo-600 font-medium">
+                                <i class="fas fa-user-plus mr-2"></i>Register
+                            </a>
                             <a href="{{ route('tenant.login', ['tenantId' => $tenant->id]) }}" class="text-gray-700 hover:text-indigo-600 font-medium">
                                 <i class="fas fa-sign-in-alt mr-2"></i>Login
                             </a>
@@ -118,6 +121,7 @@
                         @endif
                     @endauth
                 </div>
+
             </div>
         </div>
     </nav>

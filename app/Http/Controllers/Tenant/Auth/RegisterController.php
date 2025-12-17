@@ -61,23 +61,23 @@ class RegisterController extends Controller
                 },
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['nullable', 'in:work-bee,developer'],
         ]);
 
-        // Create user
+        // Create user with default role
         $user = User::create([
             'tenant_id' => $tenant->id,
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'work-bee',
+            'role' => 'work-bee', // Default role - admin can change later
             'email_verified_at' => now(),
         ]);
 
-        \Log::info('Tenant user registered', [
+        \Log::info('New tenant user registered', [
             'tenant_id' => $tenant->id,
             'user_id' => $user->id,
             'email' => $user->email,
+            'role' => 'work-bee',
         ]);
 
         // Set tenant context
@@ -89,6 +89,6 @@ class RegisterController extends Controller
         // Redirect to dashboard
         return redirect()
             ->route('tenant.dashboard', ['tenantId' => $tenantId])
-            ->with('success', 'Registration successful! Welcome to ' . $tenant->subdomain);
+            ->with('success', 'Welcome ' . $user->name . '! Your account has been created successfully. Admin can assign you different roles if needed.');
     }
 }
