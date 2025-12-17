@@ -6,18 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'tenant_id',
         'name',
         'email',
         'password',
         'role',
-        'email_verified_at',
+        'tenant_id',
+        'is_active',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -25,14 +27,76 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'is_active' => 'boolean',
+        'last_login_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
+
+    // Existing relationships and methods...
+    
+    /**
+     * Get user's initials for avatar
+     */
+    public function getInitialsAttribute(): string
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        $names = explode(' ', $this->name);
+        if (count($names) >= 2) {
+            return strtoupper(substr($names[0], 0, 1) . substr($names[1], 0, 1));
+        }
+        return strtoupper(substr($this->name, 0, 2));
     }
 
+    /**
+     * Get role color class
+     */
+    public function getRoleColorAttribute(): string
+    {
+        return match($this->role) {
+            'admin' => 'bg-gradient-to-br from-red-500 to-pink-600',
+            'developer' => 'bg-gradient-to-br from-purple-500 to-indigo-600',
+            'work-bee' => 'bg-gradient-to-br from-green-500 to-emerald-600',
+            default => 'bg-gradient-to-br from-blue-500 to-cyan-600',
+        };
+    }
+
+    /**
+     * Get role badge class
+     */
+    public function getRoleBadgeAttribute(): string
+    {
+        return match($this->role) {
+            'admin' => 'bg-red-100 text-red-800 border-red-200',
+            'developer' => 'bg-purple-100 text-purple-800 border-purple-200',
+            'work-bee' => 'bg-green-100 text-green-800 border-green-200',
+            default => 'bg-blue-100 text-blue-800 border-blue-200',
+        };
+    }
+    /**
+     * Relationship: User has many ideas
+     */
+    public function ideas()
+    {
+        return $this->hasMany(Idea::class);
+    }
+
+    /**
+     * Relationship: User has many votes
+     */
+    public function votes()
+    {
+        return $this->hasMany(IdeaVote::class);
+    }
+
+    /**
+     * Relationship: User has many comments
+     */
+    public function comments()
+    {
+        return $this->hasMany(IdeaComment::class);
+    }
     /**
      * Global scope to filter users by tenant
      */

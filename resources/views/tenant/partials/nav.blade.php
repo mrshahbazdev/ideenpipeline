@@ -73,12 +73,55 @@
 
                     <!-- Admin: Manage Teams -->
                     @if(Auth::user()->isAdmin())
-                        <a href="{{ route('tenant.teams.index', ['tenantId' => $tenant->id]) }}" 
-                           class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                                  {{ request()->routeIs('tenant.teams.index', 'tenant.teams.create', 'tenant.teams.edit', 'tenant.teams.show') ? 'bg-red-100 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
-                            <i class="fas fa-shield-alt mr-2"></i>Admin
-                        </a>
+                        <div class="relative" x-data="{ adminOpen: false }">
+                            <button @click="adminOpen = !adminOpen"
+                                    class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center
+                                        {{ request()->routeIs('tenant.teams.*', 'tenant.admin.*') ? 'bg-red-100 text-red-700 shadow-sm' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }}">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Admin
+                                <i class="fas fa-chevron-down ml-2 text-xs transition-transform" :class="{ 'rotate-180': adminOpen }"></i>
+                            </button>
+                            
+                            <div x-show="adminOpen" 
+                                @click.away="adminOpen = false"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50"
+                                style="display: none;">
+                                
+                                <a href="{{ route('tenant.admin.users.index', ['tenantId' => $tenant->id]) }}" 
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-users-cog w-5 mr-3 text-red-500"></i>
+                                    <span class="font-medium">User Management</span>
+                                </a>
+                                
+                                <a href="{{ route('tenant.teams.index', ['tenantId' => $tenant->id]) }}" 
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-users w-5 mr-3 text-red-500"></i>
+                                    <span class="font-medium">Team Management</span>
+                                </a>
+
+                                <div class="border-t border-gray-100 my-2"></div>
+                                
+                                <a href="{{ route('tenant.admin.analytics', ['tenantId' => $tenant->id]) }}" 
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-chart-line w-5 mr-3 text-red-500"></i>
+                                    <span class="font-medium">Analytics</span>
+                                </a>
+                                
+                                <a href="{{ route('tenant.admin.settings', ['tenantId' => $tenant->id]) }}" 
+                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-cog w-5 mr-3 text-red-500"></i>
+                                    <span class="font-medium">Settings</span>
+                                </a>
+                            </div>
+                        </div>
                     @endif
+
                 </div>
             </div>
 

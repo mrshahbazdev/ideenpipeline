@@ -7,6 +7,7 @@ use App\Http\Controllers\Tenant\TeamsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Tenant\UserTeamsController;
 use App\Http\Controllers\Tenant\IdeasController;
+use App\Http\Controllers\Tenant\Admin\{UserManagementController, AnalyticsController, SettingsController};
 // Home - show all tenants or tenant-specific landing
 Route::get('/', function () {
     $tenant = request()->attributes->get('tenant');
@@ -66,6 +67,21 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
             Route::delete('/teams/{team}', [TeamsController::class, 'destroy'])->name('teams.destroy');
             Route::post('/teams/{team}/members', [TeamsController::class, 'addMember'])->name('teams.add-member');
             Route::delete('/teams/{team}/members/{user}', [TeamsController::class, 'removeMember'])->name('teams.remove-member');
+            // User Management
+            Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+            Route::get('/users/create', [UserManagementController::class, 'create'])->name('users.create');
+            Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+            Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])->name('users.edit');
+            Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
+            Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+            Route::post('/users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus'])->name('users.toggle-status');
+            
+            // Analytics
+            Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
+            
+            // Settings
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+            Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
         });
 
         // User Teams (All authenticated users)
