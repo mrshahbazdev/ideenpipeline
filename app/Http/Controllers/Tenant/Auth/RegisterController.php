@@ -7,15 +7,12 @@ use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    use RegistersUsers;
-
-    protected $redirectTo = '/dashboard';
-
     public function __construct()
     {
         $this->middleware('guest');
@@ -54,39 +51,15 @@ class RegisterController extends Controller
         }
 
         // Validate
-        $validator = $this->validator($request->all(), $tenant);
-        
-        if ($validator->fails()) {
-            return back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        // Create user
-        $user = $this->create($request->all(), $tenant);
-
-        // Log in user
-        $this->guard()->login($user);
-
-        return redirect()
-            ->route('tenant.dashboard', ['tenantId' => $tenantId])
-            ->with('success', 'Registration successful! Welcome to ' . $tenant->subdomain);
-    }
-
-    /**
-     * Validator
-     */
-    protected function validator(array $data, Tenant $tenant): \Illuminate\Contracts\Validation\Validator
-    {
-        return Validator::make($data, [
+        $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 
                 'string', 
                 'email', 
                 'max:255',
-                // Email must be unique WITHIN this tenant only
                 function ($attribute, $value, $fail) use ($tenant) {
+                    // Check if email exists in this tenant
                     $exists = User::withoutGlobalScope('tenant')
                         ->where('tenant_id', $tenant->id)
                         ->where('email', $value)
@@ -100,20 +73,23 @@ class RegisterController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['nullable', 'in:work-bee,developer'],
         ]);
-    }
 
-    /**
-     * Create user
-     */
-    protected function create(array $data, Tenant $tenant): User
-    {
-        return User::create([
+        // Create user
+        $user = User::create([
             'tenant_id' => $tenant->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => $data['role'] ?? 'work-bee',
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'work-bee',
             'email_verified_at' => now(), // Auto-verify
         ]);
+
+        // Log in user
+        Auth::login($user);
+
+        // Redirect to dashboard
+        return redirect()
+            ->route('tenant.dashboard', ['tenantId' => $tenantId])
+            ->with('success', 'Registration successful! Welcome to ' . $tenant->subdomain);
     }
 }
