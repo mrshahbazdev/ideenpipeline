@@ -9,21 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tenants', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->string('platform_subscription_id')->nullable();
-            $table->unsignedBigInteger('platform_user_id')->nullable();
+            $table->string('id')->primary(); // tenant_xxxxx
+            $table->string('subdomain')->unique();
             $table->string('admin_name');
             $table->string('admin_email');
-            $table->string('package_name');
-            $table->string('subdomain')->unique();
-            $table->string('domain')->nullable()->unique();
-            $table->timestamp('starts_at')->nullable();
+            $table->string('package_name')->default('basic');
+            $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->timestamp('expires_at')->nullable();
-            $table->string('status')->default('active');
-            $table->json('metadata')->nullable();
             $table->timestamps();
-            
-            $table->index(['status', 'expires_at']);
+
+            $table->index('subdomain');
+            $table->index('status');
         });
     }
 
