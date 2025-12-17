@@ -99,6 +99,74 @@ class IdeasController extends Controller
         return view('tenant.ideas.create', compact('tenant', 'user', 'currentTeam'));
     }
     /**
+     * Toggle vote on idea
+     */
+    public function vote(Request $request, string $tenantId, Idea $idea): JsonResponse
+    {
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = Auth::user();
+
+        // Check if user is member of idea's team
+        if (!$idea->team->hasMember($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be a team member to vote.',
+            ], 403);
+        }
+
+        try {
+            // Check if already voted
+            $existingVote = $idea->votes()->where('user_id', $user->id)->first();
+
+            if ($existingVote) {
+                // Remove vote (unvote)
+                $existingVote->delete();
+                $idea->decrement('votes');
+                $hasVoted = false;
+                $message = 'Vote removed';
+            } else {
+                // Add vote
+                $idea->votes()->create([
+                    'user_id' => $user->id,
+                    'vote_type' => 'up',
+                ]);
+                $idea->increment('votes');
+                $hasVoted = true;
+                $message = 'Vote added';
+            }
+
+            // Refresh idea to get updated vote count
+            $idea->refresh();
+
+            \Log::info('Vote toggled', [
+                'idea_id' => $idea->id,
+                'user_id' => $user->id,
+                'action' => $hasVoted ? 'added' : 'removed',
+                'total_votes' => $idea->votes,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'hasVoted' => $hasVoted,
+                'voteCount' => $idea->votes,
+                'votersCount' => $idea->votes()->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Vote failed', [
+                'idea_id' => $idea->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process vote',
+            ], 500);
+        }
+    }
+    /**
      * Quick status change (Admin only)
      */
     public function updateStatus(Request $request, string $tenantId, Idea $idea): RedirectResponse

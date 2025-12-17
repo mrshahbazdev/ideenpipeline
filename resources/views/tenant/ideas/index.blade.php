@@ -230,12 +230,18 @@
                                 </div>
 
                                 <!-- Votes -->
+                                <!-- Votes -->
                                 <div class="flex items-center space-x-2">
-                                    <button class="flex items-center px-3 py-1 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition">
+                                    <button onclick="cardVote({{ $idea->id }}, event)" 
+                                            data-idea-id="{{ $idea->id }}"
+                                            data-has-voted="{{ $idea->hasVoted($user) ? 'true' : 'false' }}"
+                                            class="flex items-center px-3 py-1 rounded-lg hover:bg-indigo-200 transition
+                                            {{ $idea->hasVoted($user) ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600' }}">
                                         <i class="fas fa-arrow-up mr-1"></i>
-                                        <span class="font-semibold">{{ $idea->votes }}</span>
+                                        <span class="font-semibold vote-count-{{ $idea->id }}">{{ $idea->votes }}</span>
                                     </button>
                                 </div>
+
                             </div>
 
                             <!-- Tags -->
@@ -303,6 +309,41 @@
         </div>
 
     </div>
+        <script>
+    function cardVote(ideaId, event) {
+        event.preventDefault();
+        const button = event.currentTarget;
+        const csrfToken = '{{ csrf_token() }}';
+        
+        button.disabled = true;
+        
+        fetch(`/tenant/{{ $tenant->id }}/ideas/${ideaId}/vote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector(`.vote-count-${ideaId}`).textContent = data.voteCount;
+                
+                if (data.hasVoted) {
+                    button.classList.remove('bg-indigo-100', 'text-indigo-600');
+                    button.classList.add('bg-green-100', 'text-green-600');
+                } else {
+                    button.classList.remove('bg-green-100', 'text-green-600');
+                    button.classList.add('bg-indigo-100', 'text-indigo-600');
+                }
+            }
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    }
+</script>
 
 </body>
 </html>

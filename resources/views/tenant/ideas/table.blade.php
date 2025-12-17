@@ -180,6 +180,16 @@
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Umsetzung
                             </th>
+                            <th class="sortable px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                                onclick="window.location.href='{{ route('tenant.ideas.table', ['tenantId' => $tenant->id, 'sort' => 'votes', 'order' => $sortBy === 'votes' && $sortOrder === 'asc' ? 'desc' : 'asc']) }}'">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <span>Votes</span>
+                                    @if($sortBy === 'votes')
+                                        <i class="fas fa-sort-{{ $sortOrder === 'asc' ? 'up' : 'down' }} text-indigo-600"></i>
+                                    @endif
+                                </div>
+                            </th>
+
                             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                 Actions
                             </th>
@@ -269,6 +279,16 @@
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
+                                </td>
+                                <!-- Votes -->
+                                <td class="px-4 py-4 text-center">
+                                    <button onclick="quickVote({{ $idea->id }}, this)" 
+                                            data-has-voted="{{ $idea->hasVoted($user) ? 'true' : 'false' }}"
+                                            class="inline-flex items-center px-3 py-2 rounded-lg transition
+                                            {{ $idea->hasVoted($user) ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }} hover:bg-indigo-100">
+                                        <i class="fas fa-arrow-up mr-2"></i>
+                                        <span class="font-bold">{{ $idea->votes }}</span>
+                                    </button>
                                 </td>
 
                                                             <!-- Actions -->
@@ -385,6 +405,49 @@
 
 
     </div>
+<script>
+    function quickVote(ideaId, button) {
+        const csrfToken = '{{ csrf_token() }}';
+        
+        button.disabled = true;
+        button.style.opacity = '0.6';
+        
+        fetch(`/tenant/{{ $tenant->id }}/ideas/${ideaId}/vote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update vote count
+                button.querySelector('span').textContent = data.voteCount;
+                
+                // Update button style
+                if (data.hasVoted) {
+                    button.classList.remove('bg-gray-100', 'text-gray-700');
+                    button.classList.add('bg-green-100', 'text-green-700');
+                } else {
+                    button.classList.remove('bg-green-100', 'text-green-700');
+                    button.classList.add('bg-gray-100', 'text-gray-700');
+                }
+                
+                button.dataset.hasVoted = data.hasVoted;
+            }
+        })
+        .catch(error => {
+            console.error('Vote error:', error);
+            alert('Failed to vote');
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.style.opacity = '1';
+        });
+    }
+</script>
 
 </body>
 </html>

@@ -104,14 +104,18 @@
                             <!-- Vote Button -->
                             <div class="flex items-center space-x-3">
                                 <button 
-                                    class="vote-button flex flex-col items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition shadow-lg
-                                    {{ $idea->hasVoted($user) ? 'active bg-green-600 hover:bg-green-700' : '' }}"
-                                    onclick="voteIdea({{ $idea->id }})">
+                                    id="voteButton"
+                                    data-idea-id="{{ $idea->id }}"
+                                    data-has-voted="{{ $idea->hasVoted($user) ? 'true' : 'false' }}"
+                                    class="vote-button flex flex-col items-center px-6 py-3 rounded-lg transition shadow-lg font-semibold transform hover:scale-105
+                                    {{ $idea->hasVoted($user) ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }} text-white"
+                                    onclick="toggleVote()">
                                     <i class="fas fa-arrow-up text-2xl mb-1"></i>
-                                    <span class="font-bold text-lg">{{ $idea->votes }}</span>
-                                    <span class="text-xs">{{ $idea->hasVoted($user) ? 'Voted' : 'Vote' }}</span>
+                                    <span class="font-bold text-lg" id="voteCount">{{ $idea->votes }}</span>
+                                    <span class="text-xs" id="voteText">{{ $idea->hasVoted($user) ? 'Voted' : 'Vote' }}</span>
                                 </button>
                             </div>
+
                         </div>
                     </div>
 
@@ -322,7 +326,7 @@
                                 <i class="fas fa-arrow-up text-green-600 text-xl mr-3"></i>
                                 <span class="text-sm text-gray-700">Upvotes</span>
                             </div>
-                            <span class="text-2xl font-bold text-green-600">{{ $idea->votes }}</span>
+                            <span class="text-2xl font-bold text-green-600" id="voteCount2">{{ $idea->votes }}</span>
                         </div>
 
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -330,39 +334,78 @@
                                 <i class="fas fa-users text-gray-600 text-xl mr-3"></i>
                                 <span class="text-sm text-gray-700">Voters</span>
                             </div>
-                            <span class="text-2xl font-bold text-gray-600">{{ $idea->votes()->count() }}</span>
+                            <span class="text-2xl font-bold text-gray-600" id="votersCount">{{ $idea->votes()->count() }}</span>
                         </div>
+
+                        @if($idea->votes()->count() > 0)
+                            <div class="pt-3 border-t border-gray-200">
+                                <p class="text-xs text-gray-600 mb-2">Voting Rate</p>
+                                @php
+                                    $teamMemberCount = $idea->team->member_count;
+                                    $votePercentage = $teamMemberCount > 0 ? round(($idea->votes()->count() / $teamMemberCount) * 100) : 0;
+                                @endphp
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-600 h-2 rounded-full" style="width: {{ $votePercentage }}%"></div>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-1">{{ $votePercentage }}% of team members voted</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
+
                 <!-- Recent Voters -->
+                <!-- Recent Supporters -->
                 @if($idea->votes()->count() > 0)
                     <div class="bg-white rounded-xl shadow-lg p-6">
                         <h3 class="text-lg font-bold text-gray-900 mb-4">
                             <i class="fas fa-heart text-red-500 mr-2"></i>
-                            Recent Supporters
+                            Recent Supporters ({{ $idea->votes()->count() }})
                         </h3>
                         <div class="space-y-3">
-                            @foreach($idea->votes()->with('user')->latest()->take(5)->get() as $vote)
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm
-                                        {{ $vote->user->role === 'admin' ? 'bg-red-500' : '' }}
-                                        {{ $vote->user->role === 'developer' ? 'bg-purple-500' : '' }}
-                                        {{ $vote->user->role === 'work-bee' ? 'bg-green-500' : '' }}
-                                        {{ $vote->user->role === 'standard' ? 'bg-blue-500' : '' }}
-                                    ">
-                                        {{ strtoupper(substr($vote->user->name, 0, 1)) }}
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-sm font-medium text-gray-900">{{ $vote->user->name }}</p>
-                                        <p class="text-xs text-gray-500">{{ $vote->created_at->diffForHumans() }}</p>
+                            @foreach($idea->votes()->with('user')->latest()->take(10)->get() as $vote)
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm
+                                            {{ $vote->user->role === 'admin' ? 'bg-red-500' : '' }}
+                                            {{ $vote->user->role === 'developer' ? 'bg-purple-500' : '' }}
+                                            {{ $vote->user->role === 'work-bee' ? 'bg-green-500' : '' }}
+                                            {{ $vote->user->role === 'standard' ? 'bg-blue-500' : '' }}
+                                        ">
+                                            {{ strtoupper(substr($vote->user->name, 0, 1)) }}
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900">{{ $vote->user->name }}</p>
+                                            <p class="text-xs text-gray-500">{{ $vote->created_at->diffForHumans() }}</p>
+                                        </div>
                                     </div>
                                     <i class="fas fa-thumbs-up text-green-500"></i>
                                 </div>
                             @endforeach
                         </div>
+
+                        @if($idea->votes()->count() > 10)
+                            <div class="mt-4 text-center">
+                                <p class="text-sm text-gray-600">
+                                    + {{ $idea->votes()->count() - 10 }} more supporters
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">
+                            <i class="fas fa-heart text-gray-300 mr-2"></i>
+                            Supporters
+                        </h3>
+                        <div class="text-center py-6">
+                            <i class="fas fa-users text-gray-300 text-4xl mb-3"></i>
+                            <p class="text-gray-600 text-sm">No votes yet</p>
+                            <p class="text-gray-500 text-xs mt-1">Be the first to support this idea!</p>
+                        </div>
                     </div>
                 @endif
+
                 <!-- Status History -->
 <div class="bg-white rounded-xl shadow-lg p-6">
     <h3 class="text-lg font-bold text-gray-900 mb-4">
@@ -497,9 +540,12 @@
     </div>
 
     <!-- Vote Modal/Toast (Future) -->
-    <div id="voteToast" class="hidden fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
-        <i class="fas fa-check-circle mr-2"></i>Vote recorded!
+    <!-- Vote Toast -->
+    <div id="voteToast" class="hidden fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span>Vote recorded!</span>
     </div>
+
 
     <!-- JavaScript -->
     <script>
@@ -524,6 +570,86 @@
             navigator.clipboard.writeText(window.location.href);
             alert('Link copied to clipboard!');
         });
+    </script>
+    <!-- Vote JavaScript -->
+    <script>
+        let hasVoted = {{ $idea->hasVoted($user) ? 'true' : 'false' }};
+        
+        function toggleVote() {
+            const button = document.getElementById('voteButton');
+            const ideaId = button.dataset.ideaId;
+            const csrfToken = '{{ csrf_token() }}';
+            
+            // Disable button during request
+            button.disabled = true;
+            button.style.opacity = '0.6';
+            
+            fetch(`/tenant/{{ $tenant->id }}/ideas/${ideaId}/vote`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update vote count
+                    document.getElementById('voteCount').textContent = data.voteCount;
+                    document.getElementById('voteText').textContent = data.hasVoted ? 'Voted' : 'Vote';
+                    
+                    // Update button state
+                    hasVoted = data.hasVoted;
+                    button.dataset.hasVoted = data.hasVoted;
+                    
+                    // Update button colors
+                    if (data.hasVoted) {
+                        button.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+                        button.classList.add('bg-green-600', 'hover:bg-green-700');
+                    } else {
+                        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                        button.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                    }
+                    
+                    // Update voters count in sidebar
+                    const votersCountEl = document.getElementById('votersCount');
+                    if (votersCountEl) {
+                        votersCountEl.textContent = data.votersCount;
+                    }
+                    
+                    // Show toast
+                    showToast(data.message);
+                    
+                    // Reload voters list if visible
+                    if (data.hasVoted) {
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Vote error:', error);
+                alert('Failed to process vote. Please try again.');
+            })
+            .finally(() => {
+                // Re-enable button
+                button.disabled = false;
+                button.style.opacity = '1';
+            });
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('voteToast');
+            if (toast) {
+                toast.querySelector('span').textContent = message;
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
     </script>
 
 </body>
