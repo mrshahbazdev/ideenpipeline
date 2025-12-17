@@ -40,6 +40,11 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
     Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         
+        // Ideas (requires team membership)
+        Route::get('/ideas', [IdeasController::class, 'index'])->name('ideas.index');
+        Route::get('/ideas/create', [IdeasController::class, 'create'])->name('ideas.create');
+        Route::post('/ideas', [IdeasController::class, 'store'])->name('ideas.store');
+        Route::get('/ideas/{idea}', [IdeasController::class, 'show'])->name('ideas.show');
         // Teams routes (Admin only)
         Route::middleware(['admin.only'])->group(function () {
             Route::get('/teams', [TeamsController::class, 'index'])->name('teams.index');

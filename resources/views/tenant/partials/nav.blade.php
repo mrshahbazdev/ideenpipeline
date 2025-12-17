@@ -53,8 +53,9 @@
                     @endif
 
                     <!-- Ideas -->
-                    <a href="#" 
-                       class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                    <a href="{{ route('tenant.ideas.index', ['tenantId' => $tenant->id]) }}" 
+                    class="px-3 py-2 rounded-lg text-sm font-medium transition
+                            {{ request()->routeIs('tenant.ideas.*') ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100' }}">
                         <i class="fas fa-lightbulb mr-2"></i>Ideas
                     </a>
 
