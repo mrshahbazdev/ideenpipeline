@@ -43,6 +43,7 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
         
         // Ideas (requires team membership)
         Route::get('/ideas', [IdeasController::class, 'index'])->name('ideas.index');
+        Route::get('/ideas/table', [IdeasController::class, 'table'])->name('ideas.table');
         Route::get('/ideas/create', [IdeasController::class, 'create'])->name('ideas.create');
         Route::post('/ideas', [IdeasController::class, 'store'])->name('ideas.store');
         Route::get('/ideas/{idea}', [IdeasController::class, 'show'])->name('ideas.show');
