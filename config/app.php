@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
     'base_domain' => env('BASE_DOMAIN', 'ideenpipeline.de'),
-
+    'platform_api_token' => env('PLATFORM_API_TOKEN', 'test-token-12345'),
     /*
     |--------------------------------------------------------------------------
     | Application Environment

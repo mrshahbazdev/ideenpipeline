@@ -12,11 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Apply subdomain validation to web routes
+        // Web middleware
         $middleware->web(append: [
             \App\Http\Middleware\ValidateSubdomain::class,
         ]);
         
+        // Register aliases
         $middleware->alias([
             'auth.platform' => \App\Http\Middleware\AuthenticatePlatform::class,
             'identify.tenant' => \App\Http\Middleware\IdentifyTenant::class,

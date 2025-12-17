@@ -9,23 +9,33 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class TenantController extends Controller
 {
     /**
-     * Create new tenant (no separate database)
+     * Create new tenant (Single Database Multi-Tenancy)
      */
     public function create(Request $request): JsonResponse
     {
+        // Validate API token
+        if (!$this->validateApiToken($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Invalid API token.',
+            ], 401);
+        }
+
         $validated = $request->validate([
             'tenant_id' => 'required|string|unique:tenants,id',
-            'subdomain' => 'required|string|unique:tenants,subdomain',
+            'subdomain' => 'required|string|unique:tenants,subdomain|alpha_dash',
             'subscription_id' => 'required',
             'user_id' => 'required',
-            'admin_name' => 'required|string',
-            'admin_email' => 'required|email',
+            'admin_name' => 'required|string|max:255',
+            'admin_email' => 'required|email|max:255',
             'admin_password' => 'required|string|min:8',
-            'package_name' => 'required|string',
+            'package_name' => 'required|string|max:255',
             'starts_at' => 'required|date',
             'expires_at' => 'nullable|date|after:starts_at',
         ]);
@@ -33,14 +43,29 @@ class TenantController extends Controller
         DB::beginTransaction();
 
         try {
-            $startsAt = \Carbon\Carbon::parse($validated['starts_at']);
+            // Parse dates
+            $startsAt = Carbon::parse($validated['starts_at']);
             $expiresAt = isset($validated['expires_at']) 
-                ? \Carbon\Carbon::parse($validated['expires_at'])
+                ? Carbon::parse($validated['expires_at'])
                 : null;
+
+            // Ensure expires_at is after starts_at
+            if ($expiresAt && $expiresAt <= $startsAt) {
+                throw new \Exception('Expiry date must be after start date');
+            }
 
             // Generate proper domain based on environment
             $baseDomain = config('app.base_domain', 'ideenpipeline.de');
             $domain = $validated['subdomain'] . '.' . $baseDomain;
+
+            // Check if email already exists in another tenant
+            $existingUser = User::withoutGlobalScope('tenant')
+                ->where('email', $validated['admin_email'])
+                ->first();
+
+            if ($existingUser) {
+                throw new \Exception('Email already exists in another tenant');
+            }
 
             // Create tenant record
             $tenant = Tenant::create([
@@ -51,13 +76,13 @@ class TenantController extends Controller
                 'admin_email' => $validated['admin_email'],
                 'package_name' => $validated['package_name'],
                 'subdomain' => $validated['subdomain'],
-                'domain' => $domain, // ← Fixed: Use production domain
+                'domain' => $domain,
                 'starts_at' => $startsAt,
                 'expires_at' => $expiresAt,
                 'status' => 'active',
             ]);
 
-            // Create admin user
+            // Create admin user for this tenant
             $user = User::withoutGlobalScope('tenant')->create([
                 'tenant_id' => $tenant->id,
                 'name' => $validated['admin_name'],
@@ -69,10 +94,12 @@ class TenantController extends Controller
 
             DB::commit();
 
-            \Log::info('Tenant created successfully', [
+            Log::info('Tenant created successfully', [
                 'tenant_id' => $tenant->id,
                 'subdomain' => $tenant->subdomain,
                 'domain' => $tenant->domain,
+                'admin_email' => $tenant->admin_email,
+                'is_active' => $tenant->isActive(),
             ]);
 
             return response()->json([
@@ -83,14 +110,30 @@ class TenantController extends Controller
                     'subdomain' => $tenant->subdomain,
                     'domain' => $tenant->domain,
                     'admin_user_id' => $user->id,
+                    'admin_email' => $user->email,
+                    'starts_at' => $tenant->starts_at->toIso8601String(),
+                    'expires_at' => $tenant->expires_at?->toIso8601String(),
+                    'is_active' => $tenant->isActive(),
+                    'status' => $tenant->status,
                 ],
             ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
 
         } catch (\Exception $e) {
             DB::rollBack();
             
-            \Log::error('Tenant creation failed', [
+            Log::error('Tenant creation failed', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'data' => $validated ?? [],
             ]);
 
             return response()->json([
@@ -102,17 +145,33 @@ class TenantController extends Controller
     }
 
     /**
-     * Update tenant password
+     * Update tenant password (sync from main platform)
      */
     public function updatePassword(Request $request, string $tenantId): JsonResponse
     {
+        // Validate API token
+        if (!$this->validateApiToken($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Invalid API token.',
+            ], 401);
+        }
+
         $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|string|min:8',
         ]);
 
         try {
-            $tenant = Tenant::findOrFail($tenantId);
+            // Find tenant
+            $tenant = Tenant::find($tenantId);
+
+            if (!$tenant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tenant not found',
+                ], 404);
+            }
 
             // Find user in this tenant
             $user = User::withoutGlobalScope('tenant')
@@ -131,12 +190,29 @@ class TenantController extends Controller
             $user->password = Hash::make($validated['password']);
             $user->save();
 
+            Log::info('Password updated for tenant user', [
+                'tenant_id' => $tenantId,
+                'user_id' => $user->id,
+                'email' => $user->email,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Password updated successfully',
+                'data' => [
+                    'tenant_id' => $tenantId,
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                ],
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Password update failed', [
+                'tenant_id' => $tenantId,
+                'email' => $validated['email'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Password update failed',
@@ -146,16 +222,208 @@ class TenantController extends Controller
     }
 
     /**
-     * Health check
+     * Get tenant status
+     */
+    public function status(string $tenantId): JsonResponse
+    {
+        try {
+            $tenant = Tenant::find($tenantId);
+
+            if (!$tenant) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tenant not found',
+                ], 404);
+            }
+
+            // Get users count
+            $usersCount = User::withoutGlobalScope('tenant')
+                ->where('tenant_id', $tenantId)
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'tenant_id' => $tenant->id,
+                    'subdomain' => $tenant->subdomain,
+                    'domain' => $tenant->domain,
+                    'status' => $tenant->status,
+                    'is_active' => $tenant->isActive(),
+                    'is_expired' => $tenant->isExpired(),
+                    'days_remaining' => $tenant->daysRemaining(),
+                    'starts_at' => $tenant->starts_at?->toIso8601String(),
+                    'expires_at' => $tenant->expires_at?->toIso8601String(),
+                    'package_name' => $tenant->package_name,
+                    'admin_name' => $tenant->admin_name,
+                    'admin_email' => $tenant->admin_email,
+                    'users_count' => $usersCount,
+                    'created_at' => $tenant->created_at->toIso8601String(),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get tenant status', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get tenant status',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update tenant status (activate/deactivate)
+     */
+    public function updateStatus(Request $request, string $tenantId): JsonResponse
+    {
+        // Validate API token
+        if (!$this->validateApiToken($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Invalid API token.',
+            ], 401);
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:active,inactive,suspended',
+            'expires_at' => 'nullable|date',
+        ]);
+
+        try {
+            $tenant = Tenant::findOrFail($tenantId);
+
+            $tenant->status = $validated['status'];
+            
+            if (isset($validated['expires_at'])) {
+                $tenant->expires_at = Carbon::parse($validated['expires_at']);
+            }
+
+            $tenant->save();
+
+            Log::info('Tenant status updated', [
+                'tenant_id' => $tenantId,
+                'old_status' => $tenant->getOriginal('status'),
+                'new_status' => $tenant->status,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tenant status updated successfully',
+                'data' => [
+                    'tenant_id' => $tenant->id,
+                    'status' => $tenant->status,
+                    'is_active' => $tenant->isActive(),
+                    'expires_at' => $tenant->expires_at?->toIso8601String(),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to update tenant status', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update tenant status',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete tenant (soft delete - set status to inactive)
+     */
+    public function delete(Request $request, string $tenantId): JsonResponse
+    {
+        // Validate API token
+        if (!$this->validateApiToken($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized. Invalid API token.',
+            ], 401);
+        }
+
+        try {
+            $tenant = Tenant::findOrFail($tenantId);
+
+            // Soft delete - just set status to inactive
+            $tenant->status = 'inactive';
+            $tenant->save();
+
+            Log::warning('Tenant deactivated', [
+                'tenant_id' => $tenantId,
+                'subdomain' => $tenant->subdomain,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tenant deactivated successfully',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to deactivate tenant', [
+                'tenant_id' => $tenantId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to deactivate tenant',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Health check endpoint
      */
     public function health(): JsonResponse
     {
-        return response()->json([
-            'status' => 'ok',
-            'tool' => 'CRM Tool',
-            'database' => 'Single Database Multi-Tenancy',
-            'tenants_count' => Tenant::count(),
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        try {
+            $stats = [
+                'total_tenants' => Tenant::count(),
+                'active_tenants' => Tenant::where('status', 'active')->count(),
+                'expired_tenants' => Tenant::where('expires_at', '<', now())->count(),
+                'total_users' => User::withoutGlobalScope('tenant')->count(),
+            ];
+
+            return response()->json([
+                'status' => 'ok',
+                'tool' => 'CRM Tool',
+                'domain' => config('app.url'),
+                'timestamp' => now()->toIso8601String(),
+                'database' => 'connected',
+                'architecture' => 'Single Database Multi-Tenancy',
+                'stats' => $stats,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Validate API token from request
+     */
+    private function validateApiToken(Request $request): bool
+    {
+        $token = $request->bearerToken() ?? $request->header('Authorization');
+        
+        // Remove 'Bearer ' prefix if present
+        if ($token && str_starts_with($token, 'Bearer ')) {
+            $token = substr($token, 7);
+        }
+        
+        $expectedToken = config('app.platform_api_token', 'test-token-12345');
+        
+        return $token === $expectedToken;
     }
 }
