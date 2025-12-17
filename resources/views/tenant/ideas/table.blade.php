@@ -275,26 +275,25 @@
                                 <td class="px-4 py-4">
                                     <div class="flex items-center justify-center space-x-2">
                                         <a href="{{ route('tenant.ideas.show', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                                        class="text-indigo-600 hover:text-indigo-900" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         
-                                        @if($user->isAdmin())
-                                            <button class="text-green-600 hover:text-green-900" title="Approve">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="text-red-600 hover:text-red-900" title="Reject">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                        @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
+                                            <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
+                                            class="text-gray-600 hover:text-gray-900" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                         @endif
                                         
-                                        @if($user->id === $idea->user_id || $user->isAdmin())
-                                            <button class="text-gray-600 hover:text-gray-900" title="Edit">
-                                                <i class="fas fa-edit"></i>
+                                        @if($user->isAdmin())
+                                            <button class="text-green-600 hover:text-green-900" title="Quick Approve">
+                                                <i class="fas fa-check"></i>
                                             </button>
                                         @endif
                                     </div>
                                 </td>
+
                             </tr>
                         @empty
                             <tr>
@@ -314,19 +313,39 @@
         </div>
 
         <!-- Legend -->
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 class="font-semibold text-blue-900 mb-2 text-sm">
-                <i class="fas fa-info-circle mr-2"></i>Priority Calculations
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h4 class="font-semibold text-blue-900 mb-3 text-sm flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>Priority Calculation Formula
             </h4>
-            <div class="grid md:grid-cols-2 gap-4 text-xs text-blue-800">
-                <div>
-                    <strong>Prio 1 (Pain Score):</strong> Direct measure of problem severity (0-10)
+            <div class="grid md:grid-cols-2 gap-6 text-sm text-blue-800">
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-indigo-600 mb-2">Prio 1 = (Kosten / 100) + Dauer</p>
+                    <p class="text-xs text-gray-600">Lower is better - measures cost and time investment</p>
+                    <div class="mt-2 text-xs">
+                        <strong>Example:</strong> ($400 / 100) + 3 days = 7.00
+                    </div>
                 </div>
-                <div>
-                    <strong>Prio 2 (ROI):</strong> Pain Score / (Cost × Duration) - Higher = Better ROI
+                <div class="bg-white rounded-lg p-4">
+                    <p class="font-bold text-purple-600 mb-2">Prio 2 = Prio 1 / Schmerz</p>
+                    <p class="text-xs text-gray-600">Lower is better - ROI considering pain level</p>
+                    <div class="mt-2 text-xs">
+                        <strong>Example:</strong> 7.00 / 8 = 0.88
+                    </div>
                 </div>
             </div>
+            
+            <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded p-3">
+                <p class="text-xs font-semibold text-yellow-900 mb-2">
+                    <i class="fas fa-lightbulb mr-1"></i>Implementation Priority Strategy:
+                </p>
+                <ul class="text-xs text-yellow-800 space-y-1">
+                    <li>• <strong>High Schmerz + Low Prio 2</strong> = Quick win! (High pain, cheap/fast fix)</li>
+                    <li>• <strong>High Schmerz + High Prio 2</strong> = Important but expensive (plan carefully)</li>
+                    <li>• <strong>Low Schmerz + Low Prio 2</strong> = Low priority (nice to have)</li>
+                </ul>
+            </div>
         </div>
+
 
     </div>
 

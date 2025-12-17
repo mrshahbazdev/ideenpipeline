@@ -47,6 +47,9 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
         Route::get('/ideas/create', [IdeasController::class, 'create'])->name('ideas.create');
         Route::post('/ideas', [IdeasController::class, 'store'])->name('ideas.store');
         Route::get('/ideas/{idea}', [IdeasController::class, 'show'])->name('ideas.show');
+
+        Route::get('/ideas/{idea}/edit', [IdeasController::class, 'edit'])->name('ideas.edit');
+        Route::put('/ideas/{idea}', [IdeasController::class, 'update'])->name('ideas.update');
         // Teams routes (Admin only)
         Route::middleware(['admin.only'])->group(function () {
             Route::get('/teams', [TeamsController::class, 'index'])->name('teams.index');

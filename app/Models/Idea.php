@@ -22,6 +22,7 @@ class Idea extends Model
         'pain_score',
         'cost_estimate',
         'duration_estimate',
+        'duration_days',
         'status',
         'priority',
         'priority_1',
@@ -37,6 +38,7 @@ class Idea extends Model
         'tags' => 'array',
         'votes' => 'integer',
         'pain_score' => 'integer',
+        'duration_days' => 'integer',
         'cost_estimate' => 'decimal:2',
         'priority_1' => 'decimal:2',
         'priority_2' => 'decimal:2',
@@ -54,55 +56,73 @@ class Idea extends Model
         parent::boot();
 
         static::saving(function ($idea) {
+            // Parse duration to days if duration_estimate changed
+            if ($idea->isDirty('duration_estimate')) {
+                $idea->duration_days = $idea->parseDurationToDays($idea->duration_estimate);
+            }
+            
+            // Calculate priorities
             $idea->calculatePriorities();
         });
     }
 
     /**
      * Calculate priority scores
-     * Priority 1 = Pain Score (0-10)
-     * Priority 2 = Pain Score / (Cost * Duration in days)
+     * NEW FORMULA:
+     * Prio 1 = (Kosten / 100) + Dauer
+     * Prio 2 = Prio 1 / Schmerz
      */
     public function calculatePriorities()
     {
-        // Priority 1: Just the pain score
-        $this->priority_1 = $this->pain_score ?? 0;
+        $cost = (float) ($this->cost_estimate ?? 0);
+        $duration = (int) ($this->duration_days ?? 0);
+        $pain = (int) ($this->pain_score ?? 1); // Prevent division by zero
 
-        // Priority 2: Pain / (Cost * Duration)
-        if ($this->pain_score && $this->cost_estimate && $this->duration_estimate) {
-            $durationDays = $this->parseDuration($this->duration_estimate);
-            $cost = (float) $this->cost_estimate;
-            
-            if ($durationDays > 0 && $cost > 0) {
-                $this->priority_2 = round($this->pain_score / ($cost * $durationDays), 2);
-            }
+        // Prio 1 = (Cost / 100) + Duration
+        if ($cost > 0 || $duration > 0) {
+            $this->priority_1 = round(($cost / 100) + $duration, 2);
+        } else {
+            $this->priority_1 = 0;
+        }
+
+        // Prio 2 = Prio 1 / Pain
+        if ($this->priority_1 > 0 && $pain > 0) {
+            $this->priority_2 = round($this->priority_1 / $pain, 2);
+        } else {
+            $this->priority_2 = 0;
         }
     }
 
     /**
      * Parse duration string to days
      */
-    private function parseDuration(string $duration): int
+    public function parseDurationToDays(?string $duration): int
     {
+        if (!$duration) return 0;
+        
         $duration = strtolower(trim($duration));
         
-        if (preg_match('/(\d+)\s*(day|days)/i', $duration, $matches)) {
+        // Try to extract number and unit
+        if (preg_match('/(\d+)\s*(tag|tage|day|days|d)/i', $duration, $matches)) {
             return (int) $matches[1];
         }
         
-        if (preg_match('/(\d+)\s*(week|weeks)/i', $duration, $matches)) {
+        if (preg_match('/(\d+)\s*(woche|wochen|week|weeks|w)/i', $duration, $matches)) {
             return (int) $matches[1] * 7;
         }
         
-        if (preg_match('/(\d+)\s*(month|months)/i', $duration, $matches)) {
+        if (preg_match('/(\d+)\s*(monat|monate|month|months|m)/i', $duration, $matches)) {
             return (int) $matches[1] * 30;
         }
         
-        return 1; // Default 1 day
+        // If just a number, assume days
+        if (is_numeric($duration)) {
+            return (int) $duration;
+        }
+        
+        return 0;
     }
 
-    // ... rest of relationships and methods from previous Idea model
-    
     /**
      * Global scope - Filter by tenant
      */
@@ -137,6 +157,32 @@ class Idea extends Model
         return $this->votes()->where('user_id', $user->id)->exists();
     }
 
+    /**
+     * Check if user can edit basic fields (creator only)
+     */
+    public function canEditBasic(User $user): bool
+    {
+        return $user->id === $this->user_id || $user->isAdmin();
+    }
+
+    /**
+     * Check if user can edit work-bee fields
+     * (Schmerz, Prio 1, Prio 2, Umsetzung)
+     */
+    public function canEditWorkBee(User $user): bool
+    {
+        return $user->isWorkBee() || $user->isAdmin();
+    }
+
+    /**
+     * Check if user can edit developer fields
+     * (Lösung, Dauer, Kosten)
+     */
+    public function canEditDeveloper(User $user): bool
+    {
+        return $user->isDeveloper() || $user->isAdmin();
+    }
+
     public function getStatusBadgeClass(): string
     {
         return match($this->status) {
@@ -160,9 +206,6 @@ class Idea extends Model
         };
     }
 
-    /**
-     * Get pain level label
-     */
     public function getPainLabel(): string
     {
         if ($this->pain_score >= 8) return 'Critical';
@@ -172,9 +215,6 @@ class Idea extends Model
         return 'Minimal';
     }
 
-    /**
-     * Get pain color
-     */
     public function getPainColor(): string
     {
         if ($this->pain_score >= 8) return 'text-red-600';

@@ -130,28 +130,38 @@
                         </div>
                     @endif
 
-                    <!-- Actions (if owner or admin) -->
-                    @if($user->id === $idea->user_id || $user->isAdmin())
-                        <div class="px-8 pb-8 flex items-center space-x-3">
-                            @if($user->id === $idea->user_id)
-                                <a href="#" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                                    <i class="fas fa-edit mr-2"></i>Edit Idea
+                    <!-- Actions (if owner or admin or has permissions) -->
+                    @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
+                        <div class="px-8 pb-8 border-t border-gray-200 pt-6">
+                            <div class="flex items-center space-x-3">
+                                <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
+                                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Edit Idea
+                                    @if($user->isDeveloper())
+                                        <span class="text-xs">(Developer Fields)</span>
+                                    @elseif($user->isWorkBee())
+                                        <span class="text-xs">(Work-Bee Fields)</span>
+                                    @elseif($user->isAdmin())
+                                        <span class="text-xs">(All Fields)</span>
+                                    @endif
                                 </a>
-                            @endif
 
-                            @if($user->isAdmin())
-                                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                    <i class="fas fa-check mr-2"></i>Approve
-                                </button>
-                                <button class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
-                                    <i class="fas fa-clock mr-2"></i>Review
-                                </button>
-                                <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                    <i class="fas fa-times mr-2"></i>Reject
-                                </button>
-                            @endif
+                                @if($user->isAdmin())
+                                    <button class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                                        <i class="fas fa-check mr-2"></i>Approve
+                                    </button>
+                                    <button class="px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
+                                        <i class="fas fa-clock mr-2"></i>Review
+                                    </button>
+                                    <button class="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                        <i class="fas fa-times mr-2"></i>Reject
+                                    </button>
+                                @endif
+                            </div>
                         </div>
                     @endif
+
                 </div>
 
                 <!-- Comments Section -->

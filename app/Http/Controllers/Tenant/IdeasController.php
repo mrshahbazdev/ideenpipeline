@@ -99,6 +99,128 @@ class IdeasController extends Controller
         return view('tenant.ideas.create', compact('tenant', 'user', 'currentTeam'));
     }
     /**
+     * Show edit form
+     */
+    public function edit(string $tenantId, Idea $idea): View
+    {
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = Auth::user();
+
+        // Check access
+        if (!$idea->team->hasMember($user)) {
+            abort(403, 'You do not have access to this idea.');
+        }
+
+        return view('tenant.ideas.edit', compact('tenant', 'user', 'idea'));
+    }
+
+    /**
+     * Update idea with role-based permissions
+     */
+    public function update(Request $request, string $tenantId, Idea $idea): RedirectResponse
+    {
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = Auth::user();
+
+        // Check access
+        if (!$idea->team->hasMember($user)) {
+            abort(403, 'You do not have access to this idea.');
+        }
+
+        // Validate based on user role
+        $rules = [];
+
+        // Basic fields (creator only, unless admin)
+        if ($idea->canEditBasic($user)) {
+            $rules = array_merge($rules, [
+                'title' => ['required', 'string', 'max:255'],
+                'problem_short' => ['required', 'string', 'max:100'],
+                'goal' => ['required', 'string', 'max:1000'],
+                'description' => ['required', 'string', 'max:5000'],
+                'priority' => ['required', 'in:low,medium,high,urgent'],
+                'submitter_email' => ['required', 'email', 'max:255'],
+            ]);
+        }
+
+        // Work-bee fields (Schmerz, Umsetzung)
+        if ($idea->canEditWorkBee($user)) {
+            $rules = array_merge($rules, [
+                'pain_score' => ['nullable', 'integer', 'min:0', 'max:10'],
+                'in_implementation' => ['nullable', 'boolean'],
+                'implementation_date' => ['nullable', 'date'],
+            ]);
+        }
+
+        // Developer fields (Lösung, Dauer, Kosten)
+        if ($idea->canEditDeveloper($user)) {
+            $rules = array_merge($rules, [
+                'solution' => ['nullable', 'string', 'max:5000'],
+                'cost_estimate' => ['nullable', 'numeric', 'min:0'],
+                'duration_estimate' => ['nullable', 'string', 'max:50'],
+            ]);
+        }
+
+        // Admin can edit status
+        if ($user->isAdmin()) {
+            $rules['status'] = ['nullable', 'in:pending,in-review,approved,rejected,implemented'];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Update only allowed fields
+        if ($idea->canEditBasic($user)) {
+            $idea->title = $validated['title'] ?? $idea->title;
+            $idea->problem_short = $validated['problem_short'] ?? $idea->problem_short;
+            $idea->goal = $validated['goal'] ?? $idea->goal;
+            $idea->description = $validated['description'] ?? $idea->description;
+            $idea->priority = $validated['priority'] ?? $idea->priority;
+            $idea->submitter_email = $validated['submitter_email'] ?? $idea->submitter_email;
+        }
+
+        if ($idea->canEditWorkBee($user)) {
+            if (isset($validated['pain_score'])) {
+                $idea->pain_score = $validated['pain_score'];
+            }
+            if (isset($validated['in_implementation'])) {
+                $idea->in_implementation = $validated['in_implementation'];
+            }
+            if (isset($validated['implementation_date'])) {
+                $idea->implementation_date = $validated['implementation_date'];
+            }
+        }
+
+        if ($idea->canEditDeveloper($user)) {
+            if (isset($validated['solution'])) {
+                $idea->solution = $validated['solution'];
+            }
+            if (isset($validated['cost_estimate'])) {
+                $idea->cost_estimate = $validated['cost_estimate'];
+            }
+            if (isset($validated['duration_estimate'])) {
+                $idea->duration_estimate = $validated['duration_estimate'];
+            }
+        }
+
+        if ($user->isAdmin() && isset($validated['status'])) {
+            $idea->status = $validated['status'];
+        }
+
+        // Save (priorities will auto-calculate)
+        $idea->save();
+
+        \Log::info('Idea updated', [
+            'idea_id' => $idea->id,
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'priority_1' => $idea->priority_1,
+            'priority_2' => $idea->priority_2,
+        ]);
+
+        return redirect()
+            ->route('tenant.ideas.show', ['tenantId' => $tenantId, 'idea' => $idea->id])
+            ->with('success', 'Idea updated successfully!');
+    }
+    /**
      * Show ideas in table view (admin/management view)
      */
     public function table(string $tenantId): View|RedirectResponse
