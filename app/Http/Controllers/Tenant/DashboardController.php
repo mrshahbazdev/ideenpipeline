@@ -33,6 +33,7 @@ class DashboardController extends Controller
             'total_users' => User::where('tenant_id', $tenant->id)->count(),
             'developers' => User::where('tenant_id', $tenant->id)->where('role', 'developer')->count(),
             'work_bees' => User::where('tenant_id', $tenant->id)->where('role', 'work-bee')->count(),
+            'standard_users' => User::where('tenant_id', $tenant->id)->where('role', 'standard')->count(),
             'admins' => User::where('tenant_id', $tenant->id)->where('role', 'admin')->count(),
         ];
 
@@ -58,6 +59,7 @@ class DashboardController extends Controller
             'total_team' => User::where('tenant_id', $tenant->id)->count(),
             'developers' => User::where('tenant_id', $tenant->id)->where('role', 'developer')->count(),
             'work_bees' => User::where('tenant_id', $tenant->id)->where('role', 'work-bee')->count(),
+            'standard_users' => User::where('tenant_id', $tenant->id)->where('role', 'standard')->count(),
         ];
 
         $teamMembers = User::where('tenant_id', $tenant->id)
