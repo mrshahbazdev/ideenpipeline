@@ -87,7 +87,7 @@ class TenantController extends Controller
                 'tenant_id' => $tenant->id,
                 'name' => $validated['admin_name'],
                 'email' => $validated['admin_email'],
-                'password' => Hash::make($validated['admin_password']),
+                'password' => $validated['admin_password'],
                 'email_verified_at' => now(),
                 'role' => 'admin',
             ]);
