@@ -6,6 +6,7 @@ use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\TeamsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Tenant\UserTeamsController;
+use App\Http\Controllers\Tenant\IdeasController;
 // Home - show all tenants or tenant-specific landing
 Route::get('/', function () {
     $tenant = request()->attributes->get('tenant');
