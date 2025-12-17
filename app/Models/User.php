@@ -114,4 +114,21 @@ class User extends Authenticatable
             default => 'fa-user',
         };
     }
+    /**
+     * Relationship: User belongs to many teams
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_user')
+            ->withTimestamps()
+            ->withPivot('joined_at');
+    }
+
+    /**
+     * Check if user is in team
+     */
+    public function isInTeam(Team $team): bool
+    {
+        return $this->teams()->where('team_id', $team->id)->exists();
+    }
 }
