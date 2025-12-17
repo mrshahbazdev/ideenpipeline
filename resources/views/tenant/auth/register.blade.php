@@ -131,10 +131,11 @@
                     <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-3">
                         <p class="text-sm text-blue-800">
                             <i class="fas fa-info-circle mr-2"></i>
-                            You'll be registered as a <strong>Work-Bee</strong> (team member). 
-                            The admin can assign you different roles later if needed.
+                            You'll be registered as a <strong>Standard User</strong>. 
+                            The admin can assign you roles like <strong>Work-Bee</strong> or <strong>Developer</strong> later based on your responsibilities.
                         </p>
                     </div>
+
 
                     <!-- Submit -->
                     <button 
