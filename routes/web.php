@@ -10,7 +10,7 @@ use App\Http\Controllers\{
 use App\Http\Controllers\Tenant\{
     DashboardController,
     TeamController,
-    TeamsController,
+    MyTeamsController,
     IdeasController
 };
 use App\Http\Controllers\Tenant\Admin\{
