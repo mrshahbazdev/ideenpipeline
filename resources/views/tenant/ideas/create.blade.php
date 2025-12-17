@@ -7,43 +7,35 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .tag-input {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            min-height: 2.5rem;
+        .step-item {
+            position: relative;
         }
-        .tag-item {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            background: #EEF2FF;
-            color: #4F46E5;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
+        .step-item::after {
+            content: '';
+            position: absolute;
+            top: 2rem;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #E5E7EB;
+            z-index: -1;
         }
-        .tag-item button {
-            margin-left: 0.5rem;
-            color: #6366F1;
-            cursor: pointer;
+        .step-item:last-child::after {
+            display: none;
         }
-        .char-counter {
-            font-size: 0.75rem;
-            color: #6B7280;
+        .step-active .step-circle {
+            background: #4F46E5;
+            color: white;
+            border-color: #4F46E5;
         }
-        .char-counter.warning {
-            color: #F59E0B;
-        }
-        .char-counter.danger {
-            color: #EF4444;
+        .step-completed .step-circle {
+            background: #10B981;
+            color: white;
+            border-color: #10B981;
         }
     </style>
 </head>
-<body class="bg-gray-50" x-data="{ mobileMenuOpen: false }">
+<body class="bg-gray-50" x-data="ideaWizard()" x-init="init()">
 
     @include('tenant.partials.nav')
 
@@ -61,375 +53,377 @@
                         <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>
                         Submit New Idea
                     </h1>
-                    <p class="text-gray-600 mt-2">Share your innovative idea with your team</p>
+                    <p class="text-gray-600 mt-2">Tell us about your problem and idea</p>
                 </div>
             </div>
         </div>
 
-        <!-- Current Team Banner -->
-        <div class="mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+        <!-- Progress Steps -->
+        <div class="mb-8 bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <div class="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg" 
-                         style="background: {{ $currentTeam->color }}">
-                        {{ strtoupper(substr($currentTeam->name, 0, 1)) }}
+                <template x-for="(step, index) in steps" :key="index">
+                    <div class="step-item flex-1 text-center"
+                         :class="{
+                             'step-active': currentStep === index + 1,
+                             'step-completed': currentStep > index + 1
+                         }">
+                        <div class="step-circle w-16 h-16 mx-auto rounded-full border-4 border-gray-300 flex items-center justify-center font-bold text-lg bg-white mb-2">
+                            <span x-show="currentStep <= index + 1" x-text="index + 1"></span>
+                            <i x-show="currentStep > index + 1" class="fas fa-check"></i>
+                        </div>
+                        <p class="text-sm font-medium" x-text="step.title"></p>
                     </div>
-                    <div>
-                        <p class="text-sm text-indigo-100 mb-1">
-                            <i class="fas fa-users mr-1"></i>Submitting to Team
-                        </p>
-                        <h3 class="text-xl font-bold">{{ $currentTeam->name }}</h3>
-                        <p class="text-sm text-indigo-100 mt-1">{{ $currentTeam->member_count }} members will see this</p>
-                    </div>
-                </div>
-                <a href="{{ route('tenant.my-teams', ['tenantId' => $tenant->id]) }}" 
-                   class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition">
-                    <i class="fas fa-exchange-alt mr-2"></i>Switch Team
-                </a>
+                </template>
             </div>
         </div>
 
-        <!-- Form Card -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <form method="POST" action="{{ route('tenant.ideas.store', ['tenantId' => $tenant->id]) }}" id="ideaForm">
-                @csrf
+        <!-- Form -->
+        <form method="POST" action="{{ route('tenant.ideas.store', ['tenantId' => $tenant->id]) }}" @submit="handleSubmit">
+            @csrf
 
-                <!-- Form Content -->
-                <div class="p-8 space-y-6">
+            <input type="hidden" name="problem_short" x-model="formData.problem_short">
+            <input type="hidden" name="goal" x-model="formData.goal">
+            <input type="hidden" name="description" x-model="formData.description">
+            <input type="hidden" name="solution" x-model="formData.solution">
+            <input type="hidden" name="pain_score" x-model="formData.pain_score">
+            <input type="hidden" name="cost_estimate" x-model="formData.cost_estimate">
+            <input type="hidden" name="duration_estimate" x-model="formData.duration_estimate">
+            <input type="hidden" name="priority" x-model="formData.priority">
+            <input type="hidden" name="submitter_email" x-model="formData.submitter_email">
+            <input type="hidden" name="title" x-model="formData.title">
 
-                    <!-- Title -->
+            <!-- Step 1: Problem -->
+            <div x-show="currentStep === 1" x-transition class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                    Step 1: Your Problem
+                </h2>
+                
+                <div class="space-y-6">
                     <div>
-                        <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-heading text-gray-400 mr-2"></i>Idea Title *
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Describe your problem in 4-5 words *
                         </label>
                         <input 
                             type="text" 
-                            name="title" 
-                            id="title"
-                            value="{{ old('title') }}"
+                            x-model="formData.problem_short"
+                            placeholder='e.g., "Website login is difficult"'
+                            maxlength="50"
                             required
-                            maxlength="255"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition @error('title') border-red-500 @enderror"
-                            placeholder="Give your idea a catchy title..."
-                            oninput="updateCharCount('title', 255)"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                         >
-                        <div class="flex justify-between mt-1">
-                            @error('title')
-                                <p class="text-sm text-red-600">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
-                                </p>
-                            @else
-                                <p class="text-xs text-gray-500">
-                                    <i class="fas fa-info-circle mr-1"></i>Clear and concise title that captures the essence
-                                </p>
-                            @enderror
-                            <span class="char-counter" id="title-count">0 / 255</span>
-                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Keep it short and clear</p>
                     </div>
 
-                    <!-- Description -->
                     <div>
-                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-align-left text-gray-400 mr-2"></i>Detailed Description *
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Pain Level (How much does this hurt?) *
                         </label>
-                        <textarea 
-                            name="description" 
-                            id="description"
-                            rows="8"
-                            required
-                            maxlength="5000"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition @error('description') border-red-500 @enderror"
-                            placeholder="Describe your idea in detail. Include:&#10;• What problem does it solve?&#10;• How would it work?&#10;• What benefits would it bring?&#10;• Any implementation ideas?"
-                            oninput="updateCharCount('description', 5000)"
-                        >{{ old('description') }}</textarea>
-                        <div class="flex justify-between mt-1">
-                            @error('description')
-                                <p class="text-sm text-red-600">
-                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
-                                </p>
-                            @else
-                                <p class="text-xs text-gray-500">
-                                    <i class="fas fa-info-circle mr-1"></i>Be as detailed as possible to help others understand your vision
-                                </p>
-                            @enderror
-                            <span class="char-counter" id="description-count">0 / 5000</span>
-                        </div>
-                    </div>
-
-                    <!-- Priority -->
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-3">
-                            <i class="fas fa-flag text-gray-400 mr-2"></i>Priority Level *
-                        </label>
-                        <div class="grid md:grid-cols-4 gap-4">
-                            <label class="priority-option cursor-pointer">
-                                <input type="radio" name="priority" value="low" class="peer sr-only" {{ old('priority') === 'low' ? 'checked' : '' }}>
-                                <div class="p-4 border-2 border-gray-200 rounded-lg peer-checked:border-gray-500 peer-checked:bg-gray-50 hover:border-gray-400 transition">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <i class="fas fa-flag text-gray-500 text-2xl"></i>
-                                        <span class="hidden peer-checked:inline text-gray-600">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                    </div>
-                                    <p class="font-semibold text-gray-900">Low</p>
-                                    <p class="text-xs text-gray-600 mt-1">Nice to have</p>
-                                </div>
-                            </label>
-
-                            <label class="priority-option cursor-pointer">
-                                <input type="radio" name="priority" value="medium" class="peer sr-only" {{ old('priority', 'medium') === 'medium' ? 'checked' : '' }}>
-                                <div class="p-4 border-2 border-blue-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 hover:border-blue-400 transition">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <i class="fas fa-flag text-blue-500 text-2xl"></i>
-                                        <span class="hidden peer-checked:inline text-blue-600">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                    </div>
-                                    <p class="font-semibold text-gray-900">Medium</p>
-                                    <p class="text-xs text-gray-600 mt-1">Should implement</p>
-                                </div>
-                            </label>
-
-                            <label class="priority-option cursor-pointer">
-                                <input type="radio" name="priority" value="high" class="peer sr-only" {{ old('priority') === 'high' ? 'checked' : '' }}>
-                                <div class="p-4 border-2 border-orange-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-400 transition">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <i class="fas fa-flag text-orange-500 text-2xl"></i>
-                                        <span class="hidden peer-checked:inline text-orange-600">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                    </div>
-                                    <p class="font-semibold text-gray-900">High</p>
-                                    <p class="text-xs text-gray-600 mt-1">Important change</p>
-                                </div>
-                            </label>
-
-                            <label class="priority-option cursor-pointer">
-                                <input type="radio" name="priority" value="urgent" class="peer sr-only" {{ old('priority') === 'urgent' ? 'checked' : '' }}>
-                                <div class="p-4 border-2 border-red-200 rounded-lg peer-checked:border-red-500 peer-checked:bg-red-50 hover:border-red-400 transition">
-                                    <div class="flex items-center justify-between mb-2">
-                                        <i class="fas fa-flag text-red-500 text-2xl"></i>
-                                        <span class="hidden peer-checked:inline text-red-600">
-                                            <i class="fas fa-check-circle"></i>
-                                        </span>
-                                    </div>
-                                    <p class="font-semibold text-gray-900">Urgent</p>
-                                    <p class="text-xs text-gray-600 mt-1">Critical issue</p>
-                                </div>
-                            </label>
-                        </div>
-                        @error('priority')
-                            <p class="mt-2 text-sm text-red-600">
-                                <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <!-- Tags -->
-                    <div>
-                        <label for="tags-input" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-tags text-gray-400 mr-2"></i>Tags (Optional)
-                        </label>
-                        <div id="tag-container" class="tag-input" onclick="document.getElementById('tags-input').focus()">
+                        <div class="flex items-center space-x-4">
                             <input 
-                                type="text" 
-                                id="tags-input"
-                                class="flex-1 border-0 outline-none min-w-[120px]"
-                                placeholder="Type and press Enter..."
-                                onkeydown="handleTagInput(event)"
+                                type="range" 
+                                x-model="formData.pain_score"
+                                min="0" 
+                                max="10" 
+                                step="1"
+                                class="flex-1"
                             >
+                            <div class="w-20 text-center">
+                                <span class="text-3xl font-bold" 
+                                      :class="{
+                                          'text-green-600': formData.pain_score < 4,
+                                          'text-yellow-600': formData.pain_score >= 4 && formData.pain_score < 7,
+                                          'text-red-600': formData.pain_score >= 7
+                                      }"
+                                      x-text="formData.pain_score"></span>
+                                <p class="text-xs text-gray-600">/10</p>
+                            </div>
                         </div>
-                        <input type="hidden" name="tags" id="tags-hidden">
-                        <p class="text-xs text-gray-500 mt-1">
-                            <i class="fas fa-info-circle mr-1"></i>Add relevant tags to help categorize your idea (e.g., UI, Backend, Feature, Improvement)
-                        </p>
-                        @error('tags')
-                            <p class="mt-2 text-sm text-red-600">
-                                <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <!-- Preview Section -->
-                    <div class="border-t border-gray-200 pt-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                            <i class="fas fa-eye text-indigo-600 mr-2"></i>Preview
-                        </h3>
-                        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                            <h4 class="text-xl font-bold text-gray-900 mb-3" id="preview-title">
-                                Your Idea Title
-                            </h4>
-                            <p class="text-gray-700 whitespace-pre-line mb-4" id="preview-description">
-                                Your detailed description will appear here...
-                            </p>
-                            <div class="flex items-center space-x-2" id="preview-tags"></div>
+                        <div class="flex justify-between text-xs text-gray-600 mt-2">
+                            <span>😊 No pain</span>
+                            <span>😐 Moderate</span>
+                            <span>😣 Critical</span>
                         </div>
                     </div>
-
                 </div>
 
-                <!-- Form Actions -->
-                <div class="px-8 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                    <a href="{{ route('tenant.ideas.index', ['tenantId' => $tenant->id]) }}" 
-                       class="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition">
-                        <i class="fas fa-times mr-2"></i>Cancel
-                    </a>
-                    <button 
-                        type="submit"
-                        class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition transform hover:scale-105 shadow-lg">
+                <div class="mt-8 flex justify-end">
+                    <button type="button" @click="nextStep()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
+                        Next Step <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Goal -->
+            <div x-show="currentStep === 2" x-transition class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-bullseye text-green-500 mr-2"></i>
+                    Step 2: Your Goal
+                </h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            What needs to change for you to be satisfied? *
+                        </label>
+                        <textarea 
+                            x-model="formData.goal"
+                            rows="4"
+                            required
+                            placeholder="Describe what you want to achieve..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        ></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Your Solution Idea (Optional)
+                        </label>
+                        <textarea 
+                            x-model="formData.solution"
+                            rows="4"
+                            placeholder="If you have ideas on how to solve this, share them here..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button type="button" @click="prevStep()" class="px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                    <button type="button" @click="nextStep()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
+                        Next Step <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Details -->
+            <div x-show="currentStep === 3" x-transition class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Step 3: Problem Details
+                </h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Describe your problem or pain point in as much detail as possible *
+                        </label>
+                        <textarea 
+                            x-model="formData.description"
+                            rows="6"
+                            required
+                            placeholder="Provide detailed context about the problem..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        ></textarea>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Estimated Cost
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-3 text-gray-500">$</span>
+                                <input 
+                                    type="number" 
+                                    x-model="formData.cost_estimate"
+                                    placeholder="400.00"
+                                    step="0.01"
+                                    class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                >
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Estimated Duration
+                            </label>
+                            <input 
+                                type="text" 
+                                x-model="formData.duration_estimate"
+                                placeholder="e.g., 3 days, 2 weeks"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Priority Level *
+                        </label>
+                        <div class="grid grid-cols-4 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="formData.priority" value="low" class="peer sr-only">
+                                <div class="p-3 border-2 border-gray-200 rounded-lg peer-checked:border-gray-500 peer-checked:bg-gray-50 text-center">
+                                    <p class="font-semibold text-sm">Low</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="formData.priority" value="medium" class="peer sr-only">
+                                <div class="p-3 border-2 border-blue-200 rounded-lg peer-checked:border-blue-500 peer-checked:bg-blue-50 text-center">
+                                    <p class="font-semibold text-sm">Medium</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="formData.priority" value="high" class="peer sr-only">
+                                <div class="p-3 border-2 border-orange-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 text-center">
+                                    <p class="font-semibold text-sm">High</p>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" x-model="formData.priority" value="urgent" class="peer sr-only">
+                                <div class="p-3 border-2 border-red-200 rounded-lg peer-checked:border-red-500 peer-checked:bg-red-50 text-center">
+                                    <p class="font-semibold text-sm">Urgent</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button type="button" @click="prevStep()" class="px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                    <button type="button" @click="nextStep()" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold">
+                        Next Step <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Review & Submit -->
+            <div x-show="currentStep === 4" x-transition class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    Step 4: Review & Submit
+                </h2>
+                
+                <div class="space-y-6">
+                    <!-- Summary -->
+                    <div class="bg-gray-50 rounded-lg p-6 space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Problem</p>
+                            <p class="font-semibold" x-text="formData.problem_short"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Pain Level</p>
+                            <p class="font-semibold" x-text="formData.pain_score + '/10'"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Goal</p>
+                            <p class="text-sm" x-text="formData.goal"></p>
+                        </div>
+                        <div x-show="formData.cost_estimate">
+                            <p class="text-xs text-gray-500 mb-1">Estimated Cost</p>
+                            <p class="font-semibold" x-text="'$' + formData.cost_estimate"></p>
+                        </div>
+                        <div x-show="formData.duration_estimate">
+                            <p class="text-xs text-gray-500 mb-1">Duration</p>
+                            <p class="font-semibold" x-text="formData.duration_estimate"></p>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Your Email (for follow-up) *
+                        </label>
+                        <input 
+                            type="email" 
+                            x-model="formData.submitter_email"
+                            required
+                            placeholder="your@email.com"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                        >
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <button type="button" @click="prevStep()" class="px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-lg">
                         <i class="fas fa-paper-plane mr-2"></i>Submit Idea
                     </button>
                 </div>
-
-            </form>
-        </div>
-
-        <!-- Guidelines Card -->
-        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <div class="flex">
-                <i class="fas fa-info-circle text-blue-500 text-2xl mr-4"></i>
-                <div>
-                    <h4 class="font-semibold text-blue-900 mb-2">💡 Tips for Great Ideas</h4>
-                    <ul class="text-sm text-blue-800 space-y-2">
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i><strong>Be Specific:</strong> Clearly explain what problem your idea solves</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i><strong>Think Big:</strong> Don't hold back - even wild ideas can spark innovation</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i><strong>Add Context:</strong> Explain why this idea matters and who it would help</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i><strong>Consider Feasibility:</strong> Think about how it could realistically be implemented</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i><strong>Use Tags:</strong> Proper tags help team members find related ideas</li>
-                    </ul>
-                </div>
             </div>
-        </div>
+
+        </form>
 
     </div>
 
-    <!-- JavaScript -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
-        // Tags management
-        let tags = [];
-
-        function handleTagInput(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                const input = event.target;
-                const value = input.value.trim();
+        function ideaWizard() {
+            return {
+                currentStep: 1,
+                steps: [
+                    { title: 'Problem' },
+                    { title: 'Goal' },
+                    { title: 'Details' },
+                    { title: 'Submit' }
+                ],
+                formData: {
+                    problem_short: '',
+                    goal: '',
+                    description: '',
+                    solution: '',
+                    pain_score: 5,
+                    cost_estimate: '',
+                    duration_estimate: '',
+                    priority: 'medium',
+                    submitter_email: '{{ Auth::user()->email }}',
+                    title: ''
+                },
                 
-                if (value && !tags.includes(value)) {
-                    tags.push(value);
-                    addTagToUI(value);
-                    input.value = '';
-                    updateTagsHidden();
-                    updatePreview();
+                init() {
+                    // Auto-set title from problem_short
+                    this.$watch('formData.problem_short', value => {
+                        this.formData.title = value;
+                    });
+                },
+                
+                nextStep() {
+                    if (this.validateStep()) {
+                        this.currentStep++;
+                    }
+                },
+                
+                prevStep() {
+                    this.currentStep--;
+                },
+                
+                validateStep() {
+                    if (this.currentStep === 1) {
+                        if (!this.formData.problem_short) {
+                            alert('Please describe your problem');
+                            return false;
+                        }
+                    }
+                    if (this.currentStep === 2) {
+                        if (!this.formData.goal) {
+                            alert('Please describe your goal');
+                            return false;
+                        }
+                    }
+                    if (this.currentStep === 3) {
+                        if (!this.formData.description) {
+                            alert('Please provide problem details');
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                
+                handleSubmit(event) {
+                    if (!this.formData.submitter_email) {
+                        event.preventDefault();
+                        alert('Please provide your email');
+                    }
                 }
             }
         }
-
-        function addTagToUI(tag) {
-            const container = document.getElementById('tag-container');
-            const input = document.getElementById('tags-input');
-            
-            const tagElement = document.createElement('span');
-            tagElement.className = 'tag-item';
-            tagElement.innerHTML = `
-                ${tag}
-                <button type="button" onclick="removeTag('${tag}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            container.insertBefore(tagElement, input);
-        }
-
-        function removeTag(tag) {
-            tags = tags.filter(t => t !== tag);
-            updateTagsUI();
-            updateTagsHidden();
-            updatePreview();
-        }
-
-        function updateTagsUI() {
-            const container = document.getElementById('tag-container');
-            const input = document.getElementById('tags-input');
-            
-            // Remove all tag elements
-            container.querySelectorAll('.tag-item').forEach(el => el.remove());
-            
-            // Re-add all tags
-            tags.forEach(tag => addTagToUI(tag));
-        }
-
-        function updateTagsHidden() {
-            document.getElementById('tags-hidden').value = tags.join(',');
-        }
-
-        // Character counters
-        function updateCharCount(field, max) {
-            const input = document.getElementById(field);
-            const counter = document.getElementById(`${field}-count`);
-            const length = input.value.length;
-            
-            counter.textContent = `${length} / ${max}`;
-            
-            // Update color based on usage
-            counter.classList.remove('warning', 'danger');
-            if (length > max * 0.9) {
-                counter.classList.add('danger');
-            } else if (length > max * 0.75) {
-                counter.classList.add('warning');
-            }
-            
-            updatePreview();
-        }
-
-        // Live preview
-        function updatePreview() {
-            const title = document.getElementById('title').value || 'Your Idea Title';
-            const description = document.getElementById('description').value || 'Your detailed description will appear here...';
-            
-            document.getElementById('preview-title').textContent = title;
-            document.getElementById('preview-description').textContent = description;
-            
-            // Update tags preview
-            const tagsPreview = document.getElementById('preview-tags');
-            tagsPreview.innerHTML = '';
-            
-            tags.forEach(tag => {
-                const span = document.createElement('span');
-                span.className = 'px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded';
-                span.textContent = `#${tag}`;
-                tagsPreview.appendChild(span);
-            });
-        }
-
-        // Initialize character counters
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCharCount('title', 255);
-            updateCharCount('description', 5000);
-            
-            // Add input listeners for live preview
-            document.getElementById('title').addEventListener('input', updatePreview);
-            document.getElementById('description').addEventListener('input', updatePreview);
-        });
-
-        // Form validation
-        document.getElementById('ideaForm').addEventListener('submit', function(e) {
-            const title = document.getElementById('title').value.trim();
-            const description = document.getElementById('description').value.trim();
-            
-            if (title.length < 10) {
-                e.preventDefault();
-                alert('Title must be at least 10 characters long');
-                document.getElementById('title').focus();
-                return false;
-            }
-            
-            if (description.length < 50) {
-                e.preventDefault();
-                alert('Description must be at least 50 characters long to provide enough detail');
-                document.getElementById('description').focus();
-                return false;
-            }
-        });
     </script>
 
 </body>

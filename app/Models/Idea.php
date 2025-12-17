@@ -15,20 +15,94 @@ class Idea extends Model
         'team_id',
         'user_id',
         'title',
+        'problem_short',
+        'goal',
         'description',
+        'solution',
+        'pain_score',
+        'cost_estimate',
+        'duration_estimate',
         'status',
         'priority',
+        'priority_1',
+        'priority_2',
         'tags',
         'votes',
+        'in_implementation',
+        'implementation_date',
+        'submitter_email',
     ];
 
     protected $casts = [
         'tags' => 'array',
         'votes' => 'integer',
+        'pain_score' => 'integer',
+        'cost_estimate' => 'decimal:2',
+        'priority_1' => 'decimal:2',
+        'priority_2' => 'decimal:2',
+        'in_implementation' => 'boolean',
+        'implementation_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
+    /**
+     * Boot method - Auto-calculate priorities
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($idea) {
+            $idea->calculatePriorities();
+        });
+    }
+
+    /**
+     * Calculate priority scores
+     * Priority 1 = Pain Score (0-10)
+     * Priority 2 = Pain Score / (Cost * Duration in days)
+     */
+    public function calculatePriorities()
+    {
+        // Priority 1: Just the pain score
+        $this->priority_1 = $this->pain_score ?? 0;
+
+        // Priority 2: Pain / (Cost * Duration)
+        if ($this->pain_score && $this->cost_estimate && $this->duration_estimate) {
+            $durationDays = $this->parseDuration($this->duration_estimate);
+            $cost = (float) $this->cost_estimate;
+            
+            if ($durationDays > 0 && $cost > 0) {
+                $this->priority_2 = round($this->pain_score / ($cost * $durationDays), 2);
+            }
+        }
+    }
+
+    /**
+     * Parse duration string to days
+     */
+    private function parseDuration(string $duration): int
+    {
+        $duration = strtolower(trim($duration));
+        
+        if (preg_match('/(\d+)\s*(day|days)/i', $duration, $matches)) {
+            return (int) $matches[1];
+        }
+        
+        if (preg_match('/(\d+)\s*(week|weeks)/i', $duration, $matches)) {
+            return (int) $matches[1] * 7;
+        }
+        
+        if (preg_match('/(\d+)\s*(month|months)/i', $duration, $matches)) {
+            return (int) $matches[1] * 30;
+        }
+        
+        return 1; // Default 1 day
+    }
+
+    // ... rest of relationships and methods from previous Idea model
+    
     /**
      * Global scope - Filter by tenant
      */
@@ -43,49 +117,26 @@ class Idea extends Model
         });
     }
 
-    /**
-     * Relationship: Idea belongs to team
-     */
     public function team()
     {
         return $this->belongsTo(Team::class);
     }
 
-    /**
-     * Relationship: Idea belongs to user (creator)
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relationship: Idea has many votes
-     */
     public function votes()
     {
         return $this->hasMany(IdeaVote::class);
     }
 
-    /**
-     * Check if user has voted
-     */
     public function hasVoted(User $user): bool
     {
         return $this->votes()->where('user_id', $user->id)->exists();
     }
 
-    /**
-     * Get user's vote
-     */
-    public function getUserVote(User $user)
-    {
-        return $this->votes()->where('user_id', $user->id)->first();
-    }
-
-    /**
-     * Get status badge color
-     */
     public function getStatusBadgeClass(): string
     {
         return match($this->status) {
@@ -98,9 +149,6 @@ class Idea extends Model
         };
     }
 
-    /**
-     * Get priority badge color
-     */
     public function getPriorityBadgeClass(): string
     {
         return match($this->priority) {
@@ -113,17 +161,25 @@ class Idea extends Model
     }
 
     /**
-     * Get status icon
+     * Get pain level label
      */
-    public function getStatusIcon(): string
+    public function getPainLabel(): string
     {
-        return match($this->status) {
-            'pending' => 'fa-clock',
-            'in-review' => 'fa-eye',
-            'approved' => 'fa-check-circle',
-            'rejected' => 'fa-times-circle',
-            'implemented' => 'fa-rocket',
-            default => 'fa-circle',
-        };
+        if ($this->pain_score >= 8) return 'Critical';
+        if ($this->pain_score >= 6) return 'High';
+        if ($this->pain_score >= 4) return 'Medium';
+        if ($this->pain_score >= 2) return 'Low';
+        return 'Minimal';
+    }
+
+    /**
+     * Get pain color
+     */
+    public function getPainColor(): string
+    {
+        if ($this->pain_score >= 8) return 'text-red-600';
+        if ($this->pain_score >= 6) return 'text-orange-600';
+        if ($this->pain_score >= 4) return 'text-yellow-600';
+        return 'text-green-600';
     }
 }
