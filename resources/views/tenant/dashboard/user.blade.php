@@ -10,35 +10,7 @@
 <body class="bg-gray-50">
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-bold text-indigo-600">
-                        <i class="fas fa-lightbulb mr-2"></i>{{ $tenant->subdomain }}
-                    </h1>
-                    <span class="ml-3 px-3 py-1 text-xs font-semibold rounded-full
-                        {{ $user->role === 'developer' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}
-                    ">
-                        <i class="fas {{ $user->role === 'developer' ? 'fa-code' : 'fa-user' }} mr-1"></i>
-                        {{ ucfirst(str_replace('-', ' ', $user->role)) }}
-                    </span>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-700">
-                        <i class="fas fa-user mr-2"></i>{{ $user->name }}
-                    </span>
-                    <form method="POST" action="{{ route('tenant.logout', ['tenantId' => $tenant->id]) }}">
-                        @csrf
-                        <button class="text-sm text-red-600 hover:text-red-700 font-medium">
-                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('tenant.partials.nav')
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

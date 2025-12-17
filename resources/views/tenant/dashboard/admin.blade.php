@@ -26,54 +26,7 @@
 <body class="bg-gray-50">
 
     <!-- Top Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <!-- Left Side -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-xl font-bold text-indigo-600">
-                            <i class="fas fa-building mr-2"></i>{{ $tenant->subdomain }}
-                        </h1>
-                    </div>
-                    <div class="ml-4">
-                        <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full flex items-center">
-                            <i class="fas fa-crown mr-1"></i>ADMIN PANEL
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- Right Side -->
-                <div class="flex items-center space-x-4">
-                    <!-- Notifications -->
-                    <button class="relative p-2 text-gray-400 hover:text-gray-600 focus:outline-none">
-                        <i class="fas fa-bell text-xl"></i>
-                        <span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-                    </button>
-                    
-                    <!-- User Menu -->
-                    <div class="flex items-center space-x-3">
-                        <div class="text-right">
-                            <p class="text-sm font-medium text-gray-900">{{ $user->name }}</p>
-                            <p class="text-xs text-gray-500">{{ $user->email }}</p>
-                        </div>
-                        <div class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
-                            {{ strtoupper(substr($user->name, 0, 1)) }}
-                        </div>
-                    </div>
-                    
-                    <!-- Logout -->
-                    <form method="POST" action="{{ route('tenant.logout', ['tenantId' => $tenant->id]) }}">
-                        @csrf
-                        <button class="flex items-center px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
+    @include('tenant.partials.nav')
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
