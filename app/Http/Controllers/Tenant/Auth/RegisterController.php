@@ -8,17 +8,9 @@ use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('guest');
-        $this->middleware('identify.tenant');
-    }
-
     /**
      * Show registration form
      */
@@ -81,7 +73,7 @@ class RegisterController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role ?? 'work-bee',
-            'email_verified_at' => now(), // Auto-verify
+            'email_verified_at' => now(),
         ]);
 
         // Log in user
