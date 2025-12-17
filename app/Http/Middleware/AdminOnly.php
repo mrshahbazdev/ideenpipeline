@@ -8,9 +8,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminOnly
 {
+    /**
+     * Handle an incoming request.
+     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
+        if (!auth()->check()) {
+            abort(401, 'Unauthenticated.');
+        }
+
+        if (!auth()->user()->isAdmin()) {
             abort(403, 'Only administrators can access this area.');
         }
 

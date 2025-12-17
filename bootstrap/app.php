@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,7 +25,38 @@ return Application::configure(basePath: dirname(__DIR__))
             'validate.subdomain' => \App\Http\Middleware\ValidateSubdomain::class,
             'admin.only' => \App\Http\Middleware\AdminOnly::class,
         ]);
+
+        // Override default auth middleware
+        $middleware->redirectGuestsTo(function ($request) {
+            // Get tenant from request
+            $tenant = $request->attributes->get('tenant');
+            
+            if ($tenant) {
+                return route('tenant.login', ['tenantId' => $tenant->id]);
+            }
+
+            $tenantId = $request->route('tenantId');
+            if ($tenantId) {
+                return route('tenant.login', ['tenantId' => $tenantId]);
+            }
+
+            return route('home');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+        // Handle authentication exceptions for tenant routes
+        $exceptions->render(function (AuthenticationException $e, $request) {
+            if (!$request->expectsJson()) {
+                if ($request->is('tenant/*')) {
+                    $tenantId = $request->route('tenantId');
+                    
+                    if ($tenantId) {
+                        return redirect()->guest(route('tenant.login', ['tenantId' => $tenantId]));
+                    }
+                }
+                
+                return redirect()->guest(route('home'));
+            }
+        });
+    })
+    ->create();
