@@ -113,14 +113,14 @@ class UserManagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
+            //'email' => ['required', 'email', 'unique:users,email,' . $user->id],
             'password' => ['nullable', Password::defaults()],
             'role' => ['required', 'in:admin,developer,work-bee,standard'],
             'is_active' => ['boolean'],
         ]);
 
         $user->name = $validated['name'];
-        $user->email = $validated['email'];
+        //$user->email = $validated['email'];
         $user->role = $validated['role'];
         $user->is_active = $request->boolean('is_active');
 
