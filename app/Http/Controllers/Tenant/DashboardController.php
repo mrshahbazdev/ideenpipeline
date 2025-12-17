@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Tenant, User, Idea};
+use App\Models\{Tenant, User};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -31,34 +31,21 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_users' => User::where('tenant_id', $tenant->id)->count(),
-            'total_ideas' => Idea::where('tenant_id', $tenant->id)->count(),
-            'pending_review' => Idea::where('tenant_id', $tenant->id)->where('status', 'new')->count(),
-            'pending_pricing' => Idea::where('tenant_id', $tenant->id)->where('status', 'pending_pricing')->count(),
-            'approved_ideas' => Idea::where('tenant_id', $tenant->id)->where('status', 'approved')->count(),
-            'total_budget' => Idea::where('tenant_id', $tenant->id)
-                ->where('status', 'approved')
-                ->sum('cost'),
             'developers' => User::where('tenant_id', $tenant->id)->where('role', 'developer')->count(),
             'work_bees' => User::where('tenant_id', $tenant->id)->where('role', 'work-bee')->count(),
+            'admins' => User::where('tenant_id', $tenant->id)->where('role', 'admin')->count(),
         ];
 
         $recentUsers = User::where('tenant_id', $tenant->id)
             ->latest()
-            ->take(5)
-            ->get();
-
-        $recentIdeas = Idea::where('tenant_id', $tenant->id)
-            ->with('creator')
-            ->latest()
-            ->take(5)
+            ->take(10)
             ->get();
 
         return view('tenant.dashboard.admin', compact(
             'tenant',
             'user',
             'stats',
-            'recentUsers',
-            'recentIdeas'
+            'recentUsers'
         ));
     }
 
@@ -68,28 +55,13 @@ class DashboardController extends Controller
     private function userDashboard(Tenant $tenant, User $user): View
     {
         $stats = [
-            'my_ideas' => Idea::where('tenant_id', $tenant->id)
-                ->where('created_by', $user->id)
-                ->count(),
-            'approved_ideas' => Idea::where('tenant_id', $tenant->id)
-                ->where('created_by', $user->id)
-                ->where('status', 'approved')
-                ->count(),
-            'pending_ideas' => Idea::where('tenant_id', $tenant->id)
-                ->where('created_by', $user->id)
-                ->whereIn('status', ['new', 'pending_pricing'])
-                ->count(),
             'total_team' => User::where('tenant_id', $tenant->id)->count(),
+            'developers' => User::where('tenant_id', $tenant->id)->where('role', 'developer')->count(),
+            'work_bees' => User::where('tenant_id', $tenant->id)->where('role', 'work-bee')->count(),
         ];
 
-        $myIdeas = Idea::where('tenant_id', $tenant->id)
-            ->where('created_by', $user->id)
-            ->latest()
-            ->take(10)
-            ->get();
-
-        $allIdeas = Idea::where('tenant_id', $tenant->id)
-            ->with('creator')
+        $teamMembers = User::where('tenant_id', $tenant->id)
+            ->where('id', '!=', $user->id)
             ->latest()
             ->take(5)
             ->get();
@@ -98,8 +70,7 @@ class DashboardController extends Controller
             'tenant',
             'user',
             'stats',
-            'myIdeas',
-            'allIdeas'
+            'teamMembers'
         ));
     }
 }

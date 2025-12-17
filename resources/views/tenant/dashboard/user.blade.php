@@ -20,7 +20,8 @@
                     <span class="ml-3 px-3 py-1 text-xs font-semibold rounded-full
                         {{ $user->role === 'developer' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}
                     ">
-                        {{ ucfirst($user->role) }}
+                        <i class="fas {{ $user->role === 'developer' ? 'fa-code' : 'fa-user' }} mr-1"></i>
+                        {{ ucfirst(str_replace('-', ' ', $user->role)) }}
                     </span>
                 </div>
                 
@@ -30,7 +31,7 @@
                     </span>
                     <form method="POST" action="{{ route('tenant.logout', ['tenantId' => $tenant->id]) }}">
                         @csrf
-                        <button class="text-sm text-red-600 hover:text-red-700">
+                        <button class="text-sm text-red-600 hover:text-red-700 font-medium">
                             <i class="fas fa-sign-out-alt mr-1"></i>Logout
                         </button>
                     </form>
@@ -43,7 +44,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-800 px-4 py-3 rounded">
                 <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
             </div>
         @endif
@@ -52,132 +53,92 @@
             <h2 class="text-3xl font-bold text-gray-900">
                 Hello, {{ $user->name }}! 👋
             </h2>
-            <p class="text-gray-600 mt-2">Welcome to your workspace</p>
+            <p class="text-gray-600 mt-2">Welcome to your workspace at {{ $tenant->subdomain }}</p>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">My Ideas</p>
-                        <p class="text-3xl font-bold text-gray-900">{{ $stats['my_ideas'] }}</p>
+                        <p class="text-blue-100 text-sm">Team Members</p>
+                        <p class="text-4xl font-bold mt-2">{{ $stats['total_team'] }}</p>
                     </div>
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-lightbulb text-blue-600 text-2xl"></i>
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <i class="fas fa-users text-3xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Approved</p>
-                        <p class="text-3xl font-bold text-green-600">{{ $stats['approved_ideas'] }}</p>
+                        <p class="text-purple-100 text-sm">Developers</p>
+                        <p class="text-4xl font-bold mt-2">{{ $stats['developers'] }}</p>
                     </div>
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <i class="fas fa-code text-3xl"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Pending</p>
-                        <p class="text-3xl font-bold text-yellow-600">{{ $stats['pending_ideas'] }}</p>
+                        <p class="text-green-100 text-sm">Work-Bees</p>
+                        <p class="text-4xl font-bold mt-2">{{ $stats['work_bees'] }}</p>
                     </div>
-                    <div class="bg-yellow-100 p-3 rounded-full">
-                        <i class="fas fa-clock text-yellow-600 text-2xl"></i>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Team Size</p>
-                        <p class="text-3xl font-bold text-purple-600">{{ $stats['total_team'] }}</p>
-                    </div>
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-users text-purple-600 text-2xl"></i>
+                    <div class="bg-white/20 p-4 rounded-full">
+                        <i class="fas fa-user-friends text-3xl"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- My Ideas -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-list text-indigo-600 mr-2"></i>My Ideas
-                </h3>
-                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                    <i class="fas fa-plus mr-2"></i>Submit New Idea
+        <!-- Welcome Card -->
+        <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div class="inline-block p-4 bg-indigo-100 rounded-full mb-4">
+                <i class="fas fa-rocket text-indigo-600 text-4xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">
+                Welcome to {{ $tenant->subdomain }}!
+            </h3>
+            <p class="text-gray-600 mb-6">
+                You're now part of the team. Start collaborating with {{ $stats['total_team'] - 1 }} other members.
+            </p>
+            <div class="flex justify-center gap-4">
+                <button class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                    <i class="fas fa-plus mr-2"></i>Create New Idea
+                </button>
+                <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-list mr-2"></i>View Ideas
                 </button>
             </div>
-            <div class="p-6">
-                @forelse($myIdeas as $idea)
-                    <div class="py-4 border-b border-gray-100 last:border-0">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-medium text-gray-900">{{ $idea->title }}</h4>
-                                <p class="text-sm text-gray-500 mt-1">{{ $idea->description }}</p>
-                                <p class="text-xs text-gray-400 mt-2">
-                                    Submitted {{ $idea->created_at->diffForHumans() }}
-                                </p>
-                            </div>
-                            <span class="px-3 py-1 text-xs font-semibold rounded-full
-                                {{ $idea->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $idea->status === 'new' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $idea->status === 'pending_pricing' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                            ">
-                                {{ ucfirst(str_replace('_', ' ', $idea->status)) }}
-                            </span>
-                        </div>
-                    </div>
-                @empty
-                    <div class="text-center py-12">
-                        <i class="fas fa-lightbulb text-gray-300 text-5xl mb-4"></i>
-                        <p class="text-gray-500">You haven't submitted any ideas yet</p>
-                        <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                            Submit Your First Idea
-                        </button>
-                    </div>
-                @endforelse
-            </div>
         </div>
 
-        <!-- Recent Team Ideas -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-users text-purple-600 mr-2"></i>Recent Team Ideas
-                </h3>
-            </div>
-            <div class="p-6">
-                @forelse($allIdeas as $idea)
-                    <div class="py-3 border-b border-gray-100 last:border-0">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-sm font-medium text-gray-900">{{ $idea->title }}</p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    by {{ $idea->creator->name }} • {{ $idea->created_at->diffForHumans() }}
-                                </p>
-                            </div>
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                {{ $idea->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $idea->status === 'new' ? 'bg-blue-100 text-blue-800' : '' }}
-                            ">
-                                {{ ucfirst(str_replace('_', ' ', $idea->status)) }}
-                            </span>
+        <!-- Team Members (if any) -->
+        @if($teamMembers->count() > 0)
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-users text-indigo-600 mr-2"></i>Your Team
+            </h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($teamMembers as $member)
+                    <div class="flex items-center p-3 bg-gray-50 rounded-lg">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white
+                            {{ $member->role === 'developer' ? 'bg-purple-500' : 'bg-green-500' }}
+                        ">
+                            {{ strtoupper(substr($member->name, 0, 1)) }}
+                        </div>
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">{{ $member->name }}</p>
+                            <p class="text-xs text-gray-500">{{ ucfirst(str_replace('-', ' ', $member->role)) }}</p>
                         </div>
                     </div>
-                @empty
-                    <p class="text-gray-500 text-center py-4">No team ideas yet</p>
-                @endforelse
+                @endforeach
             </div>
         </div>
+        @endif
 
     </div>
 
