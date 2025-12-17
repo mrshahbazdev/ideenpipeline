@@ -52,7 +52,9 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
         Route::put('/ideas/{idea}', [IdeasController::class, 'update'])->name('ideas.update');
         Route::post('/ideas/{idea}/status', [IdeasController::class, 'updateStatus'])->name('ideas.update-status');
         Route::post('/ideas/{idea}/vote', [IdeasController::class, 'vote'])->name('ideas.vote');
-
+        // Comments
+        Route::post('/ideas/{idea}/comments', [IdeasController::class, 'storeComment'])->name('ideas.comments.store');
+        Route::delete('/ideas/{idea}/comments/{comment}', [IdeasController::class, 'deleteComment'])->name('ideas.comments.delete');
         // Teams routes (Admin only)
         Route::middleware(['admin.only'])->group(function () {
             Route::get('/teams', [TeamsController::class, 'index'])->name('teams.index');

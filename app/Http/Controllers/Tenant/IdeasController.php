@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use App\Models\IdeaComment;
 
 class IdeasController extends Controller
 {
@@ -72,7 +73,113 @@ class IdeasController extends Controller
             'stats'
         ));
     }
+    /**
+     * Store comment
+     */
+    public function storeComment(Request $request, string $tenantId, Idea $idea): JsonResponse
+    {
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = Auth::user();
 
+        // Check if user is member of idea's team
+        if (!$idea->team->hasMember($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You must be a team member to comment.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'comment' => ['required', 'string', 'max:1000'],
+        ]);
+
+        try {
+            $comment = $idea->comments()->create([
+                'user_id' => $user->id,
+                'comment' => $validated['comment'],
+            ]);
+
+            $comment->load('user');
+
+            \Log::info('Comment added', [
+                'idea_id' => $idea->id,
+                'user_id' => $user->id,
+                'comment_id' => $comment->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment added successfully',
+                'comment' => [
+                    'id' => $comment->id,
+                    'comment' => $comment->comment,
+                    'user' => [
+                        'name' => $comment->user->name,
+                        'role' => $comment->user->role,
+                        'avatar' => strtoupper(substr($comment->user->name, 0, 1)),
+                    ],
+                    'created_at' => $comment->created_at->diffForHumans(),
+                    'created_at_full' => $comment->created_at->format('M d, Y \a\t g:i A'),
+                ],
+                'commentsCount' => $idea->comments()->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Comment failed', [
+                'idea_id' => $idea->id,
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add comment',
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete comment
+     */
+    public function deleteComment(Request $request, string $tenantId, Idea $idea, IdeaComment $comment): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Check permissions (owner or admin)
+        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot delete this comment.',
+            ], 403);
+        }
+
+        try {
+            $comment->delete();
+
+            \Log::info('Comment deleted', [
+                'comment_id' => $comment->id,
+                'idea_id' => $idea->id,
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment deleted',
+                'commentsCount' => $idea->comments()->count(),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Comment deletion failed', [
+                'comment_id' => $comment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete comment',
+            ], 500);
+        }
+    }
     /**
      * Show create idea form
      */

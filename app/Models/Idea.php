@@ -222,4 +222,19 @@ class Idea extends Model
         if ($this->pain_score >= 4) return 'text-yellow-600';
         return 'text-green-600';
     }
+    /**
+     * Relationship: Idea has many comments
+     */
+    public function comments()
+    {
+        return $this->hasMany(IdeaComment::class)->latest();
+    }
+
+    /**
+     * Get comments count
+     */
+    public function getCommentsCountAttribute(): int
+    {
+        return $this->comments()->count();
+    }
 }

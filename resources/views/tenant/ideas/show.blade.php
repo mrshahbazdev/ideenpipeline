@@ -249,7 +249,7 @@
                         <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center justify-between">
                             <span>
                                 <i class="fas fa-comments text-indigo-600 mr-2"></i>
-                                Discussion (0)
+                                Discussion (<span id="commentsCount">{{ $idea->comments()->count() }}</span>)
                             </span>
                             <button 
                                 @click="commentOpen = !commentOpen"
@@ -260,36 +260,90 @@
 
                         <!-- Add Comment Form -->
                         <div x-show="commentOpen" 
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 transform scale-95"
-                             x-transition:enter-end="opacity-100 transform scale-100"
-                             class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200"
-                             style="display: none;">
-                            <textarea 
-                                rows="3"
-                                placeholder="Share your thoughts on this idea..."
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3"
-                            ></textarea>
-                            <div class="flex justify-end space-x-2">
-                                <button 
-                                    @click="commentOpen = false"
-                                    class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition">
-                                    Cancel
-                                </button>
-                                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                                    <i class="fas fa-paper-plane mr-2"></i>Post Comment
-                                </button>
-                            </div>
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 transform scale-95"
+                            x-transition:enter-end="opacity-100 transform scale-100"
+                            class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200"
+                            style="display: none;">
+                            <form id="commentForm" onsubmit="submitComment(event)">
+                                <textarea 
+                                    id="commentInput"
+                                    rows="3"
+                                    placeholder="Share your thoughts on this idea..."
+                                    maxlength="1000"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3"
+                                ></textarea>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-gray-500">
+                                        <span id="charCount">0</span> / 1000 characters
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <button 
+                                            type="button"
+                                            @click="commentOpen = false"
+                                            class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition">
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            type="submit"
+                                            id="submitCommentBtn"
+                                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                                            <i class="fas fa-paper-plane mr-2"></i>Post Comment
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
 
-                        <!-- Comments List (Empty State) -->
-                        <div class="text-center py-12">
-                            <i class="fas fa-comments text-gray-300 text-5xl mb-4"></i>
-                            <p class="text-gray-600 mb-2">No comments yet</p>
-                            <p class="text-sm text-gray-500">Be the first to share your thoughts!</p>
+                        <!-- Comments List -->
+                        <div id="commentsList" class="space-y-4">
+                            @forelse($idea->comments as $comment)
+                                <div class="comment-item flex space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition" data-comment-id="{{ $comment->id }}">
+                                    <!-- User Avatar -->
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0
+                                        {{ $comment->user->role === 'admin' ? 'bg-red-500' : '' }}
+                                        {{ $comment->user->role === 'developer' ? 'bg-purple-500' : '' }}
+                                        {{ $comment->user->role === 'work-bee' ? 'bg-green-500' : '' }}
+                                        {{ $comment->user->role === 'standard' ? 'bg-blue-500' : '' }}
+                                    ">
+                                        {{ strtoupper(substr($comment->user->name, 0, 1)) }}
+                                    </div>
+
+                                    <!-- Comment Content -->
+                                    <div class="flex-1">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div>
+                                                <p class="font-semibold text-gray-900">{{ $comment->user->name }}</p>
+                                                <p class="text-xs text-gray-500" title="{{ $comment->created_at->format('M d, Y \a\t g:i A') }}">
+                                                    {{ $comment->created_at->diffForHumans() }}
+                                                </p>
+                                            </div>
+                                            
+                                            @if($comment->user_id === $user->id || $user->isAdmin())
+                                                <button 
+                                                    onclick="deleteComment({{ $comment->id }})"
+                                                    class="text-red-600 hover:text-red-800 text-sm"
+                                                    title="Delete comment">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                        <p class="text-gray-700 whitespace-pre-line">{{ $comment->comment }}</p>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-12" id="emptyState">
+                                    <i class="fas fa-comments text-gray-300 text-5xl mb-4"></i>
+                                    <p class="text-gray-600 mb-2">No comments yet</p>
+                                    <p class="text-sm text-gray-500">Be the first to share your thoughts!</p>
+                                </div>
+                            @endforelse
                         </div>
+
                     </div>
                 </div>
+
 
             </div>
 
@@ -651,6 +705,202 @@
             }
         }
     </script>
+    <!-- Comments JavaScript -->
+    <script>
+        // Character counter
+        const commentInput = document.getElementById('commentInput');
+        const charCount = document.getElementById('charCount');
+        
+        if (commentInput) {
+            commentInput.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
+
+        // Submit comment
+        function submitComment(event) {
+            event.preventDefault();
+            
+            const form = document.getElementById('commentForm');
+            const input = document.getElementById('commentInput');
+            const submitBtn = document.getElementById('submitCommentBtn');
+            const comment = input.value.trim();
+            
+            if (!comment) {
+                alert('Please enter a comment');
+                return;
+            }
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Posting...';
+            
+            fetch('/tenant/{{ $tenant->id }}/ideas/{{ $idea->id }}/comments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ comment: comment })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide empty state if exists
+                    const emptyState = document.getElementById('emptyState');
+                    if (emptyState) {
+                        emptyState.remove();
+                    }
+                    
+                    // Add new comment to list
+                    const commentsList = document.getElementById('commentsList');
+                    const newComment = createCommentElement(data.comment);
+                    commentsList.insertAdjacentHTML('afterbegin', newComment);
+                    
+                    // Update count
+                    document.getElementById('commentsCount').textContent = data.commentsCount;
+                    
+                    // Reset form
+                    input.value = '';
+                    charCount.textContent = '0';
+                    
+                    // Close form
+                    Alpine.store('commentOpen', false);
+                    
+                    // Show success
+                    showToast('Comment added successfully!');
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Comment error:', error);
+                alert('Failed to add comment');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Post Comment';
+            });
+        }
+        
+        // Create comment HTML element
+        function createCommentElement(comment) {
+            const roleColors = {
+                'admin': 'bg-red-500',
+                'developer': 'bg-purple-500',
+                'work-bee': 'bg-green-500',
+                'standard': 'bg-blue-500'
+            };
+            
+            const bgColor = roleColors[comment.user.role] || 'bg-blue-500';
+            
+            return `
+                <div class="comment-item flex space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition animate-fadeIn" data-comment-id="${comment.id}">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 ${bgColor}">
+                        ${comment.user.avatar}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <div>
+                                <p class="font-semibold text-gray-900">${comment.user.name}</p>
+                                <p class="text-xs text-gray-500" title="${comment.created_at_full}">
+                                    ${comment.created_at}
+                                </p>
+                            </div>
+                            <button 
+                                onclick="deleteComment(${comment.id})"
+                                class="text-red-600 hover:text-red-800 text-sm"
+                                title="Delete comment">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <p class="text-gray-700 whitespace-pre-line">${comment.comment}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Delete comment
+        function deleteComment(commentId) {
+            if (!confirm('Delete this comment?')) {
+                return;
+            }
+            
+            fetch(`/tenant/{{ $tenant->id }}/ideas/{{ $idea->id }}/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove comment from DOM
+                    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (commentElement) {
+                        commentElement.style.transition = 'opacity 0.3s';
+                        commentElement.style.opacity = '0';
+                        setTimeout(() => {
+                            commentElement.remove();
+                            
+                            // Update count
+                            document.getElementById('commentsCount').textContent = data.commentsCount;
+                            
+                            // Show empty state if no comments
+                            if (data.commentsCount === 0) {
+                                const commentsList = document.getElementById('commentsList');
+                                commentsList.innerHTML = `
+                                    <div class="text-center py-12" id="emptyState">
+                                        <i class="fas fa-comments text-gray-300 text-5xl mb-4"></i>
+                                        <p class="text-gray-600 mb-2">No comments yet</p>
+                                        <p class="text-sm text-gray-500">Be the first to share your thoughts!</p>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }
+                    
+                    showToast('Comment deleted');
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                alert('Failed to delete comment');
+            });
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('voteToast');
+            if (toast) {
+                toast.querySelector('span').textContent = message;
+                toast.classList.remove('hidden');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 3000);
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
 
 </body>
 </html>
