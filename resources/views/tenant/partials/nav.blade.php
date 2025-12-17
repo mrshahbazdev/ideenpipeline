@@ -113,11 +113,6 @@
                                     <span class="font-medium">Analytics</span>
                                 </a>
                                 
-                                <a href="{{ route('tenant.admin.settings', ['tenantId' => $tenant->id]) }}" 
-                                class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-colors">
-                                    <i class="fas fa-cog w-5 mr-3 text-red-500"></i>
-                                    <span class="font-medium">Settings</span>
-                                </a>
                             </div>
                         </div>
                     @endif

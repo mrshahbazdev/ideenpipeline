@@ -321,39 +321,7 @@
         </div>
 
         <!-- Quick Actions -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Manage Users -->
-            <a href="#" class="group block bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <i class="fas fa-users-cog text-4xl"></i>
-                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </div>
-                <h4 class="text-xl font-bold mb-2">Manage Users</h4>
-                <p class="text-blue-100 text-sm">View, edit, and manage team member roles and permissions</p>
-            </a>
-
-            <!-- Settings -->
-            <a href="#" class="group block bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <i class="fas fa-cog text-4xl"></i>
-                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </div>
-                <h4 class="text-xl font-bold mb-2">Tenant Settings</h4>
-                <p class="text-purple-100 text-sm">Configure tenant preferences and general settings</p>
-            </a>
-
-            <!-- Analytics -->
-            <a href="#" class="group block bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                <div class="flex items-center justify-between mb-4">
-                    <i class="fas fa-chart-line text-4xl"></i>
-                    <i class="fas fa-arrow-right text-xl opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                </div>
-                <h4 class="text-xl font-bold mb-2">Analytics</h4>
-                <p class="text-green-100 text-sm">View detailed reports and usage statistics</p>
-            </a>
-
-        </div>
+       
 
     </div>
 
