@@ -8,36 +8,35 @@ use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class RegisterController extends Controller
 {
     /**
      * Show registration form
      */
-    public function showRegistrationForm(string $tenantId)
+    public function showRegistrationForm(string $tenantId): View
     {
-        // Get tenant
         $tenant = Tenant::findOrFail($tenantId);
         
-        // Check if tenant is active
         if (!$tenant->isActive()) {
             abort(403, 'This tenant subscription has expired.');
         }
 
         return view('tenant.auth.register', [
             'tenant' => $tenant,
+            'tenantId' => $tenantId,
         ]);
     }
 
     /**
      * Handle registration
      */
-    public function register(Request $request, string $tenantId)
+    public function register(Request $request, string $tenantId): RedirectResponse
     {
-        // Get tenant
         $tenant = Tenant::findOrFail($tenantId);
         
-        // Check if tenant is active
         if (!$tenant->isActive()) {
             return back()->with('error', 'This tenant subscription has expired.');
         }
@@ -51,7 +50,6 @@ class RegisterController extends Controller
                 'email', 
                 'max:255',
                 function ($attribute, $value, $fail) use ($tenant) {
-                    // Check if email exists in this tenant
                     $exists = User::withoutGlobalScope('tenant')
                         ->where('tenant_id', $tenant->id)
                         ->where('email', $value)
@@ -75,6 +73,15 @@ class RegisterController extends Controller
             'role' => $request->role ?? 'work-bee',
             'email_verified_at' => now(),
         ]);
+
+        \Log::info('Tenant user registered', [
+            'tenant_id' => $tenant->id,
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        // Set tenant context
+        session(['tenant_id' => $tenantId]);
 
         // Log in user
         Auth::login($user);
