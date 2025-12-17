@@ -9,7 +9,7 @@ use App\Http\Controllers\{
 };
 use App\Http\Controllers\Tenant\{
     DashboardController,
-    TeamController,
+    TeamsController,
     MyTeamsController,
     IdeasController
 };
@@ -62,15 +62,15 @@ Route::prefix('tenant/{tenantId}')
         
         // Teams Management (Admin only)
         Route::middleware(['admin.only'])->group(function () {
-            Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
-            Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
-            Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
-            Route::get('/teams/{team}/edit', [TeamController::class, 'edit'])->name('teams.edit');
-            Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
-            Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
-            Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
-            Route::post('/teams/{team}/add-member', [TeamController::class, 'addMember'])->name('teams.add-member');
-            Route::delete('/teams/{team}/remove-member/{user}', [TeamController::class, 'removeMember'])->name('teams.remove-member');
+            Route::get('/teams', [TeamsController::class, 'index'])->name('teams.index');
+            Route::get('/teams/create', [TeamsController::class, 'create'])->name('teams.create');
+            Route::post('/teams', [TeamsController::class, 'store'])->name('teams.store');
+            Route::get('/teams/{team}/edit', [TeamsController::class, 'edit'])->name('teams.edit');
+            Route::put('/teams/{team}', [TeamsController::class, 'update'])->name('teams.update');
+            Route::delete('/teams/{team}', [TeamsController::class, 'destroy'])->name('teams.destroy');
+            Route::get('/teams/{team}', [TeamsController::class, 'show'])->name('teams.show');
+            Route::post('/teams/{team}/add-member', [TeamsController::class, 'addMember'])->name('teams.add-member');
+            Route::delete('/teams/{team}/remove-member/{user}', [TeamsController::class, 'removeMember'])->name('teams.remove-member');
         });
         
         // Ideas (requires team membership)
