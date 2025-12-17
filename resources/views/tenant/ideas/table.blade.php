@@ -271,28 +271,65 @@
                                     @endif
                                 </td>
 
-                                <!-- Actions -->
-                                <td class="px-4 py-4">
-                                    <div class="flex items-center justify-center space-x-2">
-                                        <a href="{{ route('tenant.ideas.show', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
-                                        class="text-indigo-600 hover:text-indigo-900" title="View Details">
-                                            <i class="fas fa-eye"></i>
+                                                            <!-- Actions -->
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <!-- View -->
+                                    <a href="{{ route('tenant.ideas.show', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
+                                    class="text-indigo-600 hover:text-indigo-900 text-lg" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Edit -->
+                                    @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
+                                        <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
+                                        class="text-gray-600 hover:text-gray-900 text-lg" title="Edit">
+                                            <i class="fas fa-edit"></i>
                                         </a>
-                                        
-                                        @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
-                                            <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
-                                            class="text-gray-600 hover:text-gray-900" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                    @endif
+                                    
+                                    @if($user->isAdmin())
+                                        <!-- Quick Approve -->
+                                        @if($idea->status !== 'approved')
+                                            <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="approved">
+                                                <button type="submit" class="text-green-600 hover:text-green-900 text-lg" 
+                                                        title="Approve"
+                                                        onclick="return confirm('Approve this idea?')">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
+                                            </form>
                                         @endif
-                                        
-                                        @if($user->isAdmin())
-                                            <button class="text-green-600 hover:text-green-900" title="Quick Approve">
-                                                <i class="fas fa-check"></i>
-                                            </button>
+
+                                        <!-- Quick Review -->
+                                        @if($idea->status !== 'in-review')
+                                            <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="in-review">
+                                                <button type="submit" class="text-blue-600 hover:text-blue-900 text-lg" 
+                                                        title="Move to Review">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </form>
                                         @endif
-                                    </div>
-                                </td>
+
+                                        <!-- Quick Reject -->
+                                        @if($idea->status !== 'rejected')
+                                            <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="rejected">
+                                                <button type="submit" class="text-red-600 hover:text-red-900 text-lg" 
+                                                        title="Reject"
+                                                        onclick="return confirm('Reject this idea?')">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @endif
+                                </div>
+                            </td>
+
 
                             </tr>
                         @empty

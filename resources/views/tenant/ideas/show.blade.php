@@ -34,15 +34,28 @@
             </a>
         </div>
 
-        <!-- Messages -->
+        <!-- Success Message -->
         @if(session('success'))
-            <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm">
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm animate-pulse">
                 <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
-                    <p class="text-green-800 font-medium">{{ session('success') }}</p>
+                    <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                    <div>
+                        <p class="text-green-800 font-semibold">{{ session('success') }}</p>
+                        <p class="text-green-600 text-sm">Status has been updated successfully.</p>
+                    </div>
                 </div>
             </div>
         @endif
+
+        @if(session('error'))
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle text-red-500 text-2xl mr-3"></i>
+                    <p class="text-red-800 font-medium">{{ session('error') }}</p>
+                </div>
+            </div>
+        @endif
+
 
         <div class="grid lg:grid-cols-3 gap-8">
             
@@ -131,36 +144,98 @@
                     @endif
 
                     <!-- Actions (if owner or admin or has permissions) -->
-                    @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
-                        <div class="px-8 pb-8 border-t border-gray-200 pt-6">
-                            <div class="flex items-center space-x-3">
-                                <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
-                                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold">
-                                    <i class="fas fa-edit mr-2"></i>
-                                    Edit Idea
-                                    @if($user->isDeveloper())
-                                        <span class="text-xs">(Developer Fields)</span>
-                                    @elseif($user->isWorkBee())
-                                        <span class="text-xs">(Work-Bee Fields)</span>
-                                    @elseif($user->isAdmin())
-                                        <span class="text-xs">(All Fields)</span>
-                                    @endif
-                                </a>
+                    <!-- Actions (if owner or admin or has permissions) -->
+                <div class="px-8 pb-8 border-t border-gray-200 pt-6">
+                    <div class="flex flex-wrap items-center gap-3">
+                        
+                        <!-- Edit Button (All roles with permissions) -->
+                        @if($idea->canEditBasic($user) || $idea->canEditDeveloper($user) || $idea->canEditWorkBee($user))
+                            <a href="{{ route('tenant.ideas.edit', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" 
+                            class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold shadow-lg">
+                                <i class="fas fa-edit mr-2"></i>
+                                Edit Idea
+                                @if($user->isDeveloper())
+                                    <span class="text-xs opacity-80">(Developer)</span>
+                                @elseif($user->isWorkBee())
+                                    <span class="text-xs opacity-80">(Work-Bee)</span>
+                                @elseif($user->isAdmin())
+                                    <span class="text-xs opacity-80">(All Fields)</span>
+                                @endif
+                            </a>
+                        @endif
 
-                                @if($user->isAdmin())
-                                    <button class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                                        <i class="fas fa-check mr-2"></i>Approve
-                                    </button>
-                                    <button class="px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
-                                        <i class="fas fa-clock mr-2"></i>Review
-                                    </button>
-                                    <button class="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                                        <i class="fas fa-times mr-2"></i>Reject
-                                    </button>
+                        <!-- Admin Quick Actions -->
+                        @if($user->isAdmin())
+                            <div class="flex items-center space-x-3 ml-auto">
+                                <!-- Approve Button -->
+                                @if($idea->status !== 'approved')
+                                    <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" 
+                                                class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-lg transform hover:scale-105"
+                                                onclick="return confirm('Approve this idea?')">
+                                            <i class="fas fa-check mr-2"></i>Approve
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="px-4 py-3 bg-green-100 text-green-800 rounded-lg font-semibold">
+                                        <i class="fas fa-check-circle mr-2"></i>Approved
+                                    </span>
+                                @endif
+
+                                <!-- Review Button -->
+                                @if($idea->status !== 'in-review')
+                                    <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="status" value="in-review">
+                                        <button type="submit" 
+                                                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg transform hover:scale-105">
+                                            <i class="fas fa-eye mr-2"></i>Review
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="px-4 py-3 bg-blue-100 text-blue-800 rounded-lg font-semibold">
+                                        <i class="fas fa-eye mr-2"></i>In Review
+                                    </span>
+                                @endif
+
+                                <!-- Reject Button -->
+                                @if($idea->status !== 'rejected')
+                                    <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" 
+                                                class="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-lg transform hover:scale-105"
+                                                onclick="return confirm('Reject this idea?')">
+                                            <i class="fas fa-times mr-2"></i>Reject
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="px-4 py-3 bg-red-100 text-red-800 rounded-lg font-semibold">
+                                        <i class="fas fa-times-circle mr-2"></i>Rejected
+                                    </span>
+                                @endif
+
+                                <!-- Implement Button -->
+                                @if($idea->status === 'approved' && !$idea->in_implementation)
+                                    <form method="POST" action="{{ route('tenant.ideas.update-status', ['tenantId' => $tenant->id, 'idea' => $idea->id]) }}" class="inline">
+                                        @csrf
+                                        <input type="hidden" name="status" value="implemented">
+                                        <button type="submit" 
+                                                class="px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold shadow-lg transform hover:scale-105"
+                                                onclick="return confirm('Mark as implemented?')">
+                                            <i class="fas fa-rocket mr-2"></i>Implement
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
-                        </div>
-                    @endif
+                        @endif
+
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
 
                 </div>
 
@@ -288,6 +363,85 @@
                         </div>
                     </div>
                 @endif
+                <!-- Status History -->
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <h3 class="text-lg font-bold text-gray-900 mb-4">
+        <i class="fas fa-history text-indigo-600 mr-2"></i>
+        Status History
+    </h3>
+    <div class="space-y-3">
+        <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                {{ $idea->status === 'pending' ? 'bg-yellow-100' : 'bg-gray-100' }}">
+                <i class="fas fa-clock text-sm
+                    {{ $idea->status === 'pending' ? 'text-yellow-600' : 'text-gray-400' }}"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Pending</p>
+                <p class="text-xs text-gray-500">Awaiting review</p>
+            </div>
+            @if($idea->status === 'pending')
+                <i class="fas fa-check text-green-500"></i>
+            @endif
+        </div>
+
+        <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                {{ $idea->status === 'in-review' ? 'bg-blue-100' : 'bg-gray-100' }}">
+                <i class="fas fa-eye text-sm
+                    {{ $idea->status === 'in-review' ? 'text-blue-600' : 'text-gray-400' }}"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">In Review</p>
+                <p class="text-xs text-gray-500">Being evaluated</p>
+            </div>
+            @if($idea->status === 'in-review')
+                <i class="fas fa-check text-green-500"></i>
+            @endif
+        </div>
+
+        <div class="flex items-start space-x-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                {{ $idea->status === 'approved' ? 'bg-green-100' : 'bg-gray-100' }}">
+                <i class="fas fa-check-circle text-sm
+                    {{ $idea->status === 'approved' ? 'text-green-600' : 'text-gray-400' }}"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">Approved</p>
+                <p class="text-xs text-gray-500">Ready for implementation</p>
+            </div>
+            @if($idea->status === 'approved')
+                <i class="fas fa-check text-green-500"></i>
+            @endif
+        </div>
+
+        @if($idea->status === 'rejected')
+            <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-100">
+                    <i class="fas fa-times-circle text-sm text-red-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Rejected</p>
+                    <p class="text-xs text-gray-500">Not moving forward</p>
+                </div>
+                <i class="fas fa-check text-red-500"></i>
+            </div>
+        @endif
+
+        @if($idea->status === 'implemented')
+            <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-purple-100">
+                    <i class="fas fa-rocket text-sm text-purple-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">Implemented</p>
+                    <p class="text-xs text-gray-500">Live in production!</p>
+                </div>
+                <i class="fas fa-check text-purple-500"></i>
+            </div>
+        @endif
+    </div>
+</div>
 
                 <!-- Idea Timeline -->
                 <div class="bg-white rounded-xl shadow-lg p-6">

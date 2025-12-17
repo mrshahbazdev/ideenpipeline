@@ -50,6 +50,8 @@ Route::prefix('tenant/{tenantId}')->middleware(['identify.tenant'])->name('tenan
 
         Route::get('/ideas/{idea}/edit', [IdeasController::class, 'edit'])->name('ideas.edit');
         Route::put('/ideas/{idea}', [IdeasController::class, 'update'])->name('ideas.update');
+        Route::post('/ideas/{idea}/status', [IdeasController::class, 'updateStatus'])->name('ideas.update-status');
+
         // Teams routes (Admin only)
         Route::middleware(['admin.only'])->group(function () {
             Route::get('/teams', [TeamsController::class, 'index'])->name('teams.index');

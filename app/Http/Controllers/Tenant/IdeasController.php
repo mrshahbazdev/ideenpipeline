@@ -99,6 +99,49 @@ class IdeasController extends Controller
         return view('tenant.ideas.create', compact('tenant', 'user', 'currentTeam'));
     }
     /**
+     * Quick status change (Admin only)
+     */
+    public function updateStatus(Request $request, string $tenantId, Idea $idea): RedirectResponse
+    {
+        $tenant = Tenant::findOrFail($tenantId);
+        $user = Auth::user();
+
+        // Admin only
+        if (!$user->isAdmin()) {
+            abort(403, 'Only admins can change status.');
+        }
+
+        // Check access
+        if (!$idea->team->hasMember($user)) {
+            abort(403, 'You do not have access to this idea.');
+        }
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:pending,in-review,approved,rejected,implemented'],
+        ]);
+
+        $oldStatus = $idea->status;
+        $idea->status = $validated['status'];
+        $idea->save();
+
+        \Log::info('Idea status changed', [
+            'idea_id' => $idea->id,
+            'old_status' => $oldStatus,
+            'new_status' => $idea->status,
+            'admin_id' => $user->id,
+        ]);
+
+        $statusMessages = [
+            'approved' => 'Idea approved successfully!',
+            'in-review' => 'Idea moved to review.',
+            'rejected' => 'Idea rejected.',
+            'implemented' => 'Idea marked as implemented!',
+            'pending' => 'Idea moved back to pending.',
+        ];
+
+        return back()->with('success', $statusMessages[$idea->status] ?? 'Status updated.');
+    }
+    /**
      * Show edit form
      */
     public function edit(string $tenantId, Idea $idea): View
