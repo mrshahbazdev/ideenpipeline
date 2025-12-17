@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Tenant\Auth\LoginController;
+use App\Http\Controllers\Tenant\Auth\RegisterController;
 use App\Http\Controllers\Tenant\DashboardController;
 use Illuminate\Support\Facades\Route;
 
