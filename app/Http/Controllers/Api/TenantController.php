@@ -34,7 +34,8 @@ class TenantController extends Controller
             'user_id' => 'required',
             'admin_name' => 'required|string|max:255',
             'admin_email' => 'required|email|max:255',
-            'admin_password' => 'required|string|min:8',
+            'admin_password' => 'nullable|string|min:8',
+            'admin_password_hash' => 'nullable|string', // Accept hashed password
             'package_name' => 'required|string|max:255',
             'starts_at' => 'required|date',
             'expires_at' => 'nullable|date|after:starts_at',
@@ -43,31 +44,15 @@ class TenantController extends Controller
         DB::beginTransaction();
 
         try {
-            // Parse dates
             $startsAt = Carbon::parse($validated['starts_at']);
             $expiresAt = isset($validated['expires_at']) 
                 ? Carbon::parse($validated['expires_at'])
                 : null;
 
-            // Ensure expires_at is after starts_at
-            if ($expiresAt && $expiresAt <= $startsAt) {
-                throw new \Exception('Expiry date must be after start date');
-            }
-
-            // Generate proper domain based on environment
             $baseDomain = config('app.base_domain', 'ideenpipeline.de');
             $domain = $validated['subdomain'] . '.' . $baseDomain;
 
-            // Check if email already exists in another tenant
-            $existingUser = User::withoutGlobalScope('tenant')
-                ->where('email', $validated['admin_email'])
-                ->first();
-
-            if ($existingUser) {
-                throw new \Exception('Email already exists in another tenant');
-            }
-
-            // Create tenant record
+            // Create tenant
             $tenant = Tenant::create([
                 'id' => $validated['tenant_id'],
                 'platform_subscription_id' => $validated['subscription_id'],
@@ -82,12 +67,23 @@ class TenantController extends Controller
                 'status' => 'active',
             ]);
 
-            // Create admin user for this tenant
+            // Determine password
+            if (!empty($validated['admin_password_hash'])) {
+                // Use pre-hashed password
+                $passwordToStore = $validated['admin_password_hash'];
+            } elseif (!empty($validated['admin_password'])) {
+                // Hash plain password
+                $passwordToStore = Hash::make($validated['admin_password']);
+            } else {
+                throw new \Exception('Either admin_password or admin_password_hash required');
+            }
+
+            // Create user with hashed password
             $user = User::withoutGlobalScope('tenant')->create([
                 'tenant_id' => $tenant->id,
                 'name' => $validated['admin_name'],
                 'email' => $validated['admin_email'],
-                'password' => $validated['admin_password'],
+                'password' => $passwordToStore, // Store hash directly
                 'email_verified_at' => now(),
                 'role' => 'admin',
             ]);
@@ -97,9 +93,7 @@ class TenantController extends Controller
             Log::info('Tenant created successfully', [
                 'tenant_id' => $tenant->id,
                 'subdomain' => $tenant->subdomain,
-                'domain' => $tenant->domain,
                 'admin_email' => $tenant->admin_email,
-                'is_active' => $tenant->isActive(),
             ]);
 
             return response()->json([
@@ -115,25 +109,16 @@ class TenantController extends Controller
                     'expires_at' => $tenant->expires_at?->toIso8601String(),
                     'is_active' => $tenant->isActive(),
                     'status' => $tenant->status,
+                    'login_url' => "https://{$tenant->domain}/tenant/{$tenant->id}/login",
                 ],
             ], 201);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $e->errors(),
-            ], 422);
 
         } catch (\Exception $e) {
             DB::rollBack();
             
             Log::error('Tenant creation failed', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'data' => $validated ?? [],
+                'data' => array_except($validated ?? [], ['admin_password', 'admin_password_hash']),
             ]);
 
             return response()->json([
