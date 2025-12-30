@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Teams - {{ $tenant->subdomain }}</title>
+    <title>Meine Teams - {{ $tenant->subdomain }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -13,20 +13,18 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 flex items-center">
                 <i class="fas fa-users text-indigo-600 mr-3"></i>
-                My Teams
+                Meine Teams
             </h1>
-            <p class="text-gray-600 mt-2">Manage your team memberships</p>
+            <p class="text-gray-600 mt-2">Verwalten Sie Ihre Team-Mitgliedschaften</p>
         </div>
 
-        <!-- Messages -->
         @if(session('success'))
-            <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm animate-pulse">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm">
+                <div class="flex items-center text-white">
+                    <i class="fas fa-check-circle text-green-500 text-xl mr-3 text-white"></i>
                     <p class="text-green-800 font-medium">{{ session('success') }}</p>
                 </div>
             </div>
@@ -34,16 +32,15 @@
 
         @if(session('error'))
             <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
-                <div class="flex items-center">
-                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                <div class="flex items-center text-white">
+                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3 text-white"></i>
                     <p class="text-red-800 font-medium">{{ session('error') }}</p>
                 </div>
             </div>
         @endif
 
-        <!-- Current Active Team -->
         @if($currentTeam)
-            <div class="mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div class="mb-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-6 text-white text-white">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <div class="w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg" 
@@ -51,14 +48,14 @@
                             {{ $currentTeam->initials }}
                         </div>
                         <div>
-                            <p class="text-indigo-100 text-sm mb-1">
-                                <i class="fas fa-star mr-1"></i>Active Team
+                            <p class="text-indigo-100 text-sm mb-1 text-white">
+                                <i class="fas fa-star mr-1"></i>Aktives Team
                             </p>
                             <h3 class="text-2xl font-bold">{{ $currentTeam->name }}</h3>
-                            <p class="text-indigo-100 text-sm mt-1">
-                                <i class="fas fa-users mr-1"></i>{{ $currentTeam->member_count }} members
+                            <p class="text-indigo-100 text-sm mt-1 text-white">
+                                <i class="fas fa-users mr-1"></i>{{ $currentTeam->member_count }} Mitglieder
                                 <span class="mx-2">•</span>
-                                <i class="fas fa-lightbulb mr-1"></i>{{ $currentTeam->ideas_count }} ideas
+                                <i class="fas fa-lightbulb mr-1"></i>{{ $currentTeam->ideas_count }} Ideen
                             </p>
                         </div>
                     </div>
@@ -66,21 +63,20 @@
             </div>
         @endif
 
-        <!-- My Teams -->
         <div class="mb-8">
             <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <i class="fas fa-user-check text-green-600 mr-2"></i>
-                My Teams ({{ $myTeams->count() }})
+                Meine Teams ({{ $myTeams->count() }})
             </h2>
             
             @if($myTeams->isEmpty())
-                <div class="bg-white rounded-xl shadow-lg p-12 text-center">
+                <div class="bg-white rounded-xl shadow-lg p-12 text-center text-white">
                     <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">No Teams Yet</h3>
-                    <p class="text-gray-600 mb-6">Join a team below to get started!</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Noch keine Teams</h3>
+                    <p class="text-gray-600 mb-6">Treten Sie unten einem Team bei, um loszulegen!</p>
                 </div>
             @else
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-white">
                     @foreach($myTeams as $team)
                         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden">
                             <div class="p-6">
@@ -91,13 +87,13 @@
                                     </div>
                                     @if($currentTeam && $currentTeam->id === $team->id)
                                         <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full">
-                                            <i class="fas fa-check mr-1"></i>Active
+                                            <i class="fas fa-check mr-1 text-white"></i>Aktiv
                                         </span>
                                     @endif
                                 </div>
 
                                 <h3 class="font-bold text-gray-900 text-lg mb-2">{{ $team->name }}</h3>
-                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $team->description }}</p>
+                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $team->description ?: 'Keine Beschreibung vorhanden.' }}</p>
 
                                 <div class="flex items-center space-x-4 text-xs text-gray-600 mb-4">
                                     <span>
@@ -108,26 +104,27 @@
                                     </span>
                                 </div>
 
-                                <div class="flex items-center space-x-2">
+                                <div class="flex items-center space-x-2 text-white">
                                     @if(!$currentTeam || $currentTeam->id !== $team->id)
                                         <form method="POST" action="{{ route('tenant.teams.switch', ['tenantId' => $tenant->id, 'team' => $team->id]) }}" class="flex-1">
                                             @csrf
                                             <button type="submit" 
                                                     class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-semibold">
-                                                <i class="fas fa-exchange-alt mr-1"></i>Switch To
+                                                <i class="fas fa-exchange-alt mr-1"></i>Wechseln zu
                                             </button>
                                         </form>
                                     @else
-                                        <div class="flex-1 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold text-center">
-                                            <i class="fas fa-check mr-1"></i>Active
+                                        <div class="flex-1 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-semibold text-center text-white">
+                                            <i class="fas fa-check mr-1"></i>Aktives Team
                                         </div>
                                     @endif
                                     
                                     <form method="POST" action="{{ route('tenant.teams.leave', ['tenantId' => $tenant->id, 'team' => $team->id]) }}"
-                                          onsubmit="return confirm('Leave {{ $team->name }}?')">
+                                          onsubmit="return confirm('Möchten Sie das Team {{ $team->name }} wirklich verlassen?')">
                                         @csrf
                                         <button type="submit"
-                                                class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition text-sm">
+                                                class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition text-sm"
+                                                title="Team verlassen">
                                             <i class="fas fa-sign-out-alt"></i>
                                         </button>
                                     </form>
@@ -139,20 +136,19 @@
             @endif
         </div>
 
-        <!-- Available Teams -->
         <div>
             <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
                 <i class="fas fa-plus-circle text-blue-600 mr-2"></i>
-                Available Teams ({{ $availableTeams->count() }})
+                Verfügbare Teams ({{ $availableTeams->count() }})
             </h2>
             
             @if($availableTeams->isEmpty())
-                <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center text-white">
                     <i class="fas fa-check-circle text-green-300 text-4xl mb-3"></i>
-                    <p class="text-gray-600">You're already a member of all active teams!</p>
+                    <p class="text-gray-600">Sie sind bereits Mitglied in allen aktiven Teams!</p>
                 </div>
             @else
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-white">
                     @foreach($availableTeams as $team)
                         <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition overflow-hidden border-2 border-dashed border-gray-200">
                             <div class="p-6">
@@ -161,17 +157,17 @@
                                          style="background: {{ $team->color }}">
                                         {{ $team->initials }}
                                     </div>
-                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
-                                        New
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full text-white">
+                                        Neu
                                     </span>
                                 </div>
 
                                 <h3 class="font-bold text-gray-900 text-lg mb-2">{{ $team->name }}</h3>
-                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $team->description }}</p>
+                                <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ $team->description ?: 'Keine Beschreibung verfügbar.' }}</p>
 
                                 <div class="flex items-center space-x-4 text-xs text-gray-600 mb-4">
                                     <span>
-                                        <i class="fas fa-users mr-1"></i>{{ $team->members_count }} members
+                                        <i class="fas fa-users mr-1"></i>{{ $team->members_count }} Mitglieder
                                     </span>
                                 </div>
 
@@ -179,7 +175,7 @@
                                     @csrf
                                     <button type="submit" 
                                             class="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition font-semibold shadow-lg">
-                                        <i class="fas fa-plus mr-2"></i>Join Team
+                                        <i class="fas fa-plus mr-2"></i>Team beitreten
                                     </button>
                                 </form>
                             </div>
