@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics Dashboard - {{ $tenant->subdomain }}</title>
+    <title>Analyse-Dashboard - {{ $tenant->subdomain }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,302 +12,270 @@
 
     @include('tenant.partials.nav')
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-white">
         
-        <!-- Header -->
         <div class="mb-8">
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 flex items-center">
                         <i class="fas fa-chart-line text-indigo-600 mr-3"></i>
-                        Analytics Dashboard
+                        Analyse-Dashboard
                     </h1>
-                    <p class="text-gray-600 mt-2">Comprehensive insights into your organization's performance</p>
+                    <p class="text-gray-600 mt-2">Umfassende Einblicke in die Leistung Ihrer Organisation</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm text-gray-600">Last Updated</p>
-                    <p class="text-sm font-semibold text-gray-900">{{ now()->format('M d, Y g:i A') }}</p>
+                    <p class="text-sm text-gray-600">Letzte Aktualisierung</p>
+                    <p class="text-sm font-semibold text-gray-900">{{ now()->format('d.m.Y H:i') }} Uhr</p>
                 </div>
             </div>
 
-            <!-- Breadcrumb -->
-            <div class="flex items-center space-x-2 text-sm text-gray-600">
+            <div class="flex items-center space-x-2 text-sm text-gray-600 text-white">
                 <a href="{{ route('tenant.dashboard', ['tenantId' => $tenant->id]) }}" class="hover:text-indigo-600">Dashboard</a>
                 <i class="fas fa-chevron-right text-xs"></i>
-                <span class="text-gray-900 font-medium">Analytics</span>
+                <span class="text-gray-900 font-medium">Analysen</span>
             </div>
         </div>
 
-        <!-- Overview Stats -->
-        <div class="mb-8">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">
-                <i class="fas fa-tachometer-alt text-indigo-600 mr-2"></i>
-                Overview
+        <div class="mb-8 text-white">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 text-white">
+                <i class="fas fa-tachometer-alt text-indigo-600 mr-2 text-white"></i>
+                Übersicht
             </h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Total Users -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-white">
                 <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white">
                             <i class="fas fa-users text-2xl"></i>
                         </div>
-                        <span class="text-sm font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                            {{ $userStats['active'] }} Active
+                        <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full text-white">
+                            {{ $userStats['active'] }} Aktiv
                         </span>
                     </div>
-                    <p class="text-4xl font-bold mb-1">{{ $userStats['total'] }}</p>
-                    <p class="text-blue-100 text-sm">Total Users</p>
-                    <div class="mt-4 flex items-center text-sm">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>+{{ $userStats['new_this_month'] }} this month</span>
+                    <p class="text-4xl font-bold mb-1 text-white">{{ $userStats['total'] }}</p>
+                    <p class="text-blue-100 text-sm text-white">Benutzer gesamt</p>
+                    <div class="mt-4 flex items-center text-xs text-white">
+                        <i class="fas fa-arrow-up mr-1 text-white"></i>
+                        <span>+{{ $userStats['new_this_month'] }} diesen Monat</span>
                     </div>
                 </div>
 
-                <!-- Total Teams -->
                 <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-layer-group text-2xl"></i>
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center text-white">
+                            <i class="fas fa-layer-group text-2xl text-white"></i>
                         </div>
-                        <span class="text-sm font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                            {{ $teamStats['active'] }} Active
+                        <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full text-white">
+                            {{ $teamStats['active'] }} Aktiv
                         </span>
                     </div>
-                    <p class="text-4xl font-bold mb-1">{{ $teamStats['total'] }}</p>
-                    <p class="text-purple-100 text-sm">Total Teams</p>
-                    <div class="mt-4 flex items-center text-sm">
-                        <i class="fas fa-users mr-1"></i>
-                        <span>Avg {{ $teamStats['avg_members'] }} members/team</span>
+                    <p class="text-4xl font-bold mb-1 text-white">{{ $teamStats['total'] }}</p>
+                    <p class="text-purple-100 text-sm text-white">Teams gesamt</p>
+                    <div class="mt-4 flex items-center text-xs text-white">
+                        <i class="fas fa-users mr-1 text-white"></i>
+                        <span>Durchschn. {{ $teamStats['avg_members'] }} Mitgl./Team</span>
                     </div>
                 </div>
 
-                <!-- Total Ideas -->
                 <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-lightbulb text-2xl"></i>
+                            <i class="fas fa-lightbulb text-2xl text-white"></i>
                         </div>
-                        <span class="text-sm font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                            {{ $ideaStats['approved'] }} Approved
+                        <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            {{ $ideaStats['approved'] }} Genehmigt
                         </span>
                     </div>
                     <p class="text-4xl font-bold mb-1">{{ $ideaStats['total'] }}</p>
-                    <p class="text-yellow-100 text-sm">Total Ideas</p>
-                    <div class="mt-4 flex items-center text-sm">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>+{{ $ideaStats['this_month'] }} this month</span>
+                    <p class="text-yellow-100 text-sm">Ideen gesamt</p>
+                    <div class="mt-4 flex items-center text-xs">
+                        <i class="fas fa-arrow-up mr-1 text-white"></i>
+                        <span>+{{ $ideaStats['this_month'] }} diesen Monat</span>
                     </div>
                 </div>
 
-                <!-- Engagement Score -->
                 <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-fire text-2xl"></i>
+                            <i class="fas fa-fire text-2xl text-white"></i>
                         </div>
-                        <span class="text-sm font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                            {{ $ideaStats['total_votes'] }} Votes
+                        <span class="text-xs font-semibold bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            {{ $ideaStats['total_votes'] }} Stimmen
                         </span>
                     </div>
                     <p class="text-4xl font-bold mb-1">{{ $ideaStats['total_comments'] }}</p>
-                    <p class="text-green-100 text-sm">Total Comments</p>
-                    <div class="mt-4 flex items-center text-sm">
+                    <p class="text-green-100 text-sm">Kommentare gesamt</p>
+                    <div class="mt-4 flex items-center text-xs">
                         <i class="fas fa-chart-line mr-1"></i>
-                        <span>High engagement</span>
+                        <span>Hohe Aktivität</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="grid lg:grid-cols-2 gap-8 mb-8">
-            <!-- User Distribution by Role -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-user-tag text-indigo-600 mr-2"></i>
-                    Users by Role
+        <div class="grid lg:grid-cols-2 gap-8 mb-8 text-white">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-white">
+                <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center text-white">
+                    <i class="fas fa-user-tag text-indigo-600 mr-2 text-white"></i>
+                    Benutzer nach Rollen
                 </h3>
                 <div class="h-64">
                     <canvas id="roleChart"></canvas>
                 </div>
-                <div class="mt-6 grid grid-cols-2 gap-4">
+                <div class="mt-6 grid grid-cols-2 gap-4 text-white">
                     <div class="text-center p-3 bg-red-50 rounded-lg">
                         <p class="text-2xl font-bold text-red-600">{{ $userStats['by_role']['admin'] ?? 0 }}</p>
                         <p class="text-xs text-gray-600">Admins</p>
                     </div>
-                    <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-center p-3 bg-purple-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-purple-600">{{ $userStats['by_role']['developer'] ?? 0 }}</p>
-                        <p class="text-xs text-gray-600">Developers</p>
+                        <p class="text-xs text-gray-600">Entwickler</p>
                     </div>
-                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-center p-3 bg-green-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-green-600">{{ $userStats['by_role']['work-bee'] ?? 0 }}</p>
                         <p class="text-xs text-gray-600">Work-Bees</p>
                     </div>
-                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                    <div class="text-center p-3 bg-blue-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-blue-600">{{ $userStats['by_role']['standard'] ?? 0 }}</p>
                         <p class="text-xs text-gray-600">Standard</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Idea Status Distribution -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-white">
                 <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-tasks text-indigo-600 mr-2"></i>
-                    Ideas by Status
+                    <i class="fas fa-tasks text-indigo-600 mr-2 text-white"></i>
+                    Ideen nach Status
                 </h3>
                 <div class="h-64">
                     <canvas id="statusChart"></canvas>
                 </div>
-                <div class="mt-6 grid grid-cols-2 gap-4">
+                <div class="mt-6 grid grid-cols-2 gap-4 text-white">
                     <div class="text-center p-3 bg-yellow-50 rounded-lg">
                         <p class="text-2xl font-bold text-yellow-600">{{ $ideaStats['pending'] }}</p>
-                        <p class="text-xs text-gray-600">Pending</p>
+                        <p class="text-xs text-gray-600">In Prüfung</p>
                     </div>
-                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                    <div class="text-center p-3 bg-green-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-green-600">{{ $ideaStats['approved'] }}</p>
-                        <p class="text-xs text-gray-600">Approved</p>
+                        <p class="text-xs text-gray-600">Genehmigt</p>
                     </div>
-                    <div class="text-center p-3 bg-purple-50 rounded-lg">
+                    <div class="text-center p-3 bg-purple-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-purple-600">{{ $ideaStats['implemented'] }}</p>
-                        <p class="text-xs text-gray-600">Implemented</p>
+                        <p class="text-xs text-gray-600">Umgesetzt</p>
                     </div>
-                    <div class="text-center p-3 bg-orange-50 rounded-lg">
+                    <div class="text-center p-3 bg-orange-50 rounded-lg text-white">
                         <p class="text-2xl font-bold text-orange-600">{{ $ideaStats['avg_pain_score'] }}</p>
-                        <p class="text-xs text-gray-600">Avg Pain Score</p>
+                        <p class="text-xs text-gray-600">Ø Schmerzfaktor</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Activity Trends -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8 text-white">
             <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                <i class="fas fa-chart-area text-indigo-600 mr-2"></i>
-                Activity Trends (Last 30 Days)
+                <i class="fas fa-chart-area text-indigo-600 mr-2 text-white"></i>
+                Aktivitäts-Trends (Letzte 30 Tage)
             </h3>
             <div class="h-80">
                 <canvas id="activityChart"></canvas>
             </div>
         </div>
 
-        <!-- Top Ideas & Contributors -->
-        <div class="grid lg:grid-cols-2 gap-8 mb-8">
-            <!-- Top Ideas -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="grid lg:grid-cols-2 gap-8 mb-8 text-white">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-white">
                 <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
-                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-                    Top Ideas (Most Votes)
+                    <i class="fas fa-trophy text-yellow-500 mr-2 text-white"></i>
+                    Top-Ideen (Meiste Stimmen)
                 </h3>
-                <div class="space-y-4">
+                <div class="space-y-4 text-white">
                     @forelse($topIdeas as $index => $idea)
                         <div class="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
                                 #{{ $index + 1 }}
                             </div>
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 text-white">
                                 <p class="font-semibold text-gray-900 truncate">{{ $idea->problem_short }}</p>
-                                <div class="flex items-center space-x-3 mt-2 text-xs text-gray-600">
-                                    <span>
-                                        <i class="fas fa-user mr-1"></i>{{ $idea->user->name }}
-                                    </span>
-                                    <span>
-                                        <i class="fas fa-users mr-1"></i>{{ $idea->team->name }}
-                                    </span>
+                                <div class="flex items-center space-x-3 mt-2 text-[10px] text-gray-600">
+                                    <span><i class="fas fa-user mr-1 text-white"></i>{{ $idea->user->name }}</span>
+                                    <span><i class="fas fa-users mr-1 text-white"></i>{{ $idea->team->name }}</span>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-2 flex-shrink-0">
-                                <div class="text-center">
-                                    <p class="text-2xl font-bold text-green-600">{{ $idea->votes }}</p>
-                                    <p class="text-xs text-gray-600">votes</p>
-                                </div>
+                            <div class="text-center flex-shrink-0 text-white">
+                                <p class="text-2xl font-bold text-green-600">{{ $idea->votes }}</p>
+                                <p class="text-[10px] text-gray-600 uppercase font-bold">Stimmen</p>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-8">
-                            <i class="fas fa-inbox text-gray-300 text-4xl mb-3"></i>
-                            <p class="text-gray-600">No ideas yet</p>
-                        </div>
+                        <p class="text-center py-8 text-gray-500">Noch keine Ideen vorhanden.</p>
                     @endforelse
                 </div>
             </div>
 
-            <!-- Top Contributors -->
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-white">
+                <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center text-white">
                     <i class="fas fa-star text-indigo-600 mr-2"></i>
-                    Top Contributors
+                    Top-Beitragsleister
                 </h3>
                 <div class="space-y-4">
                     @forelse($topContributors as $index => $contributor)
-                        <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-white">
                             <div class="w-10 h-10 rounded-full bg-gradient-to-br {{ $contributor->role_color }} flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0">
                                 {{ $contributor->initials }}
                             </div>
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1 min-w-0 text-white">
                                 <p class="font-semibold text-gray-900">{{ $contributor->name }}</p>
-                                <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded {{ $contributor->role_badge }}">
-                                    {{ strtoupper(str_replace('-', ' ', $contributor->role)) }}
+                                <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded {{ $contributor->role_badge }} uppercase text-white">
+                                    {{ str_replace('work-bee', 'Work-Bee', str_replace('developer', 'Entwickler', $contributor->role)) }}
                                 </span>
                             </div>
-                            <div class="flex items-center space-x-4 text-sm flex-shrink-0">
-                                <div class="text-center">
+                            <div class="flex items-center space-x-4 text-center flex-shrink-0 text-white">
+                                <div>
                                     <p class="text-xl font-bold text-yellow-600">{{ $contributor->ideas_count }}</p>
-                                    <p class="text-xs text-gray-600">ideas</p>
+                                    <p class="text-[9px] text-gray-500 uppercase font-bold">Ideen</p>
                                 </div>
-                                <div class="text-center">
+                                <div>
                                     <p class="text-xl font-bold text-green-600">{{ $contributor->votes_count }}</p>
-                                    <p class="text-xs text-gray-600">votes</p>
-                                </div>
-                                <div class="text-center">
-                                    <p class="text-xl font-bold text-blue-600">{{ $contributor->comments_count }}</p>
-                                    <p class="text-xs text-gray-600">comments</p>
+                                    <p class="text-[9px] text-gray-500 uppercase font-bold text-white">Votes</p>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-8">
-                            <i class="fas fa-users text-gray-300 text-4xl mb-3"></i>
-                            <p class="text-gray-600">No contributors yet</p>
-                        </div>
+                        <p class="text-center py-8 text-gray-500">Noch keine Beiträge vorhanden.</p>
                     @endforelse
                 </div>
             </div>
         </div>
 
-        <!-- Team Performance -->
         @if($teamStats['largest_team'])
             <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-8 text-white mb-8">
                 <h3 class="text-2xl font-bold mb-6 flex items-center">
                     <i class="fas fa-award mr-3"></i>
-                    Team Spotlight
+                    Team im Rampenlicht
                 </h3>
                 <div class="grid md:grid-cols-3 gap-6">
                     <div>
-                        <p class="text-indigo-100 text-sm mb-2">Largest Team</p>
+                        <p class="text-indigo-100 text-sm mb-2">Größtes Team</p>
                         <p class="text-3xl font-bold">{{ $teamStats['largest_team']->name }}</p>
-                        <p class="text-indigo-200 text-sm mt-2">{{ $teamStats['largest_team']->member_count }} members</p>
+                        <p class="text-indigo-200 text-sm mt-2">{{ $teamStats['largest_team']->member_count }} Mitglieder</p>
                     </div>
                     <div>
-                        <p class="text-indigo-100 text-sm mb-2">Total Ideas from Team</p>
+                        <p class="text-indigo-100 text-sm mb-2">Gesamte Ideen aus dem Team</p>
                         <p class="text-3xl font-bold">{{ $teamStats['largest_team']->ideas()->count() }}</p>
                     </div>
                     <div>
-                        <p class="text-indigo-100 text-sm mb-2">Team Status</p>
+                        <p class="text-indigo-100 text-sm mb-2">Team-Status</p>
                         <span class="inline-block px-4 py-2 bg-white bg-opacity-20 rounded-full text-sm font-semibold">
-                            <i class="fas fa-check-circle mr-1"></i>Active
+                            <i class="fas fa-check-circle mr-1"></i>Aktiv
                         </span>
                     </div>
                 </div>
             </div>
         @endif
 
-        <!-- Quick Stats Grid -->
-        <div class="grid md:grid-cols-3 gap-6">
+        <div class="grid md:grid-cols-3 gap-6 text-white">
             <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Ideas per User</p>
+                        <p class="text-sm text-gray-600 mb-1">Ideen pro Benutzer</p>
                         <p class="text-3xl font-bold text-gray-900">
                             {{ $userStats['total'] > 0 ? round($ideaStats['total'] / $userStats['total'], 1) : 0 }}
                         </p>
@@ -318,30 +286,30 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Votes per Idea</p>
+                        <p class="text-sm text-gray-600 mb-1">Stimmen pro Idee</p>
                         <p class="text-3xl font-bold text-gray-900">
                             {{ $ideaStats['total'] > 0 ? round($ideaStats['total_votes'] / $ideaStats['total'], 1) : 0 }}
                         </p>
                     </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-arrow-up text-green-600 text-xl"></i>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-arrow-up text-green-600 text-xl text-white"></i>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Implementation Rate</p>
-                        <p class="text-3xl font-bold text-gray-900">
+                        <p class="text-sm text-gray-600 mb-1">Umsetzungsquote</p>
+                        <p class="text-3xl font-bold text-gray-900 text-white">
                             {{ $ideaStats['total'] > 0 ? round(($ideaStats['implemented'] / $ideaStats['total']) * 100) : 0 }}%
                         </p>
                     </div>
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-rocket text-purple-600 text-xl"></i>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center text-white">
+                        <i class="fas fa-rocket text-purple-600 text-xl text-white"></i>
                     </div>
                 </div>
             </div>
@@ -349,14 +317,13 @@
 
     </div>
 
-    <!-- Chart.js Scripts -->
     <script>
-        // Role Distribution Chart
+        // Rollen-Verteilung Chart
         const roleCtx = document.getElementById('roleChart').getContext('2d');
         new Chart(roleCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Admin', 'Developer', 'Work-Bee', 'Standard'],
+                labels: ['Admin', 'Entwickler', 'Work-Bee', 'Standard'],
                 datasets: [{
                     data: [
                         {{ $userStats['by_role']['admin'] ?? 0 }},
@@ -378,19 +345,17 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+                    legend: { position: 'bottom' }
                 }
             }
         });
 
-        // Status Distribution Chart
+        // Status-Verteilung Chart
         const statusCtx = document.getElementById('statusChart').getContext('2d');
         new Chart(statusCtx, {
             type: 'pie',
             data: {
-                labels: ['Pending', 'Approved', 'Implemented'],
+                labels: ['In Prüfung', 'Genehmigt', 'Umgesetzt'],
                 datasets: [{
                     data: [
                         {{ $ideaStats['pending'] }},
@@ -410,25 +375,23 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
+                    legend: { position: 'bottom' }
                 }
             }
         });
 
-        // Activity Trends Chart
+        // Aktivitäts-Trends Chart
         const activityCtx = document.getElementById('activityChart').getContext('2d');
         new Chart(activityCtx, {
             type: 'line',
             data: {
                 labels: [
                     @foreach($recentActivity['ideas_trend'] as $data)
-                        '{{ \Carbon\Carbon::parse($data->date)->format('M d') }}',
+                        '{{ \Carbon\Carbon::parse($data->date)->format('d.m.') }}',
                     @endforeach
                 ],
                 datasets: [{
-                    label: 'New Ideas',
+                    label: 'Neue Ideen',
                     data: [
                         @foreach($recentActivity['ideas_trend'] as $data)
                             {{ $data->count }},
@@ -439,7 +402,7 @@
                     tension: 0.4,
                     fill: true
                 }, {
-                    label: 'New Users',
+                    label: 'Neue Benutzer',
                     data: [
                         @foreach($recentActivity['users_trend'] as $data)
                             {{ $data->count }},
@@ -455,21 +418,13 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'top'
-                    }
+                    legend: { position: 'top' }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
                 }
             }
         });
     </script>
-
 </body>
 </html>

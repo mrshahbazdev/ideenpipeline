@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,13 +25,10 @@
 </head>
 <body class="bg-gray-50">
 
-    <!-- Top Navigation -->
     @include('tenant.partials.nav')
 
-    <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Success Alert -->
         @if(session('success'))
             <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg shadow-sm">
                 <div class="flex items-center">
@@ -41,24 +38,21 @@
             </div>
         @endif
 
-        <!-- Welcome Section -->
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900">
-                Welcome back, {{ $user->name }}! 👋
+                Willkommen zurück, {{ $user->name }}! 👋
             </h2>
             <p class="text-gray-600 mt-2">
-                Here's an overview of your {{ $tenant->subdomain }} innovation hub
+                Hier ist die Übersicht für Ihren {{ $tenant->subdomain }} Innovations-Hub
             </p>
         </div>
 
-        <!-- Statistics Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             
-            <!-- Total Users Card -->
             <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <p class="text-blue-100 text-sm font-medium uppercase tracking-wide">Total Users</p>
+                        <p class="text-blue-100 text-sm font-medium uppercase tracking-wide">Benutzer gesamt</p>
                         <p class="text-4xl font-bold mt-2">{{ $stats['total_users'] }}</p>
                     </div>
                     <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
@@ -71,11 +65,10 @@
                 </div>
             </div>
 
-            <!-- Developers Card -->
             <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <p class="text-purple-100 text-sm font-medium uppercase tracking-wide">Developers</p>
+                        <p class="text-purple-100 text-sm font-medium uppercase tracking-wide">Entwickler</p>
                         <p class="text-4xl font-bold mt-2">{{ $stats['developers'] }}</p>
                     </div>
                     <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
@@ -84,11 +77,10 @@
                 </div>
                 <div class="flex items-center text-xs text-purple-100">
                     <i class="fas fa-laptop-code mr-2"></i>
-                    <span>Technical team members</span>
+                    <span>Technisches Team</span>
                 </div>
             </div>
 
-            <!-- Work-Bees Card -->
             <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -101,15 +93,14 @@
                 </div>
                 <div class="flex items-center text-xs text-green-100">
                     <i class="fas fa-tasks mr-2"></i>
-                    <span>Active team members</span>
+                    <span>Aktive Teammitglieder</span>
                 </div>
             </div>
 
-            <!-- Standard Users Card -->
             <div class="stat-card bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <p class="text-indigo-100 text-sm font-medium uppercase tracking-wide">Standard Users</p>
+                        <p class="text-indigo-100 text-sm font-medium uppercase tracking-wide">Standard-Nutzer</p>
                         <p class="text-4xl font-bold mt-2">{{ $stats['standard_users'] }}</p>
                     </div>
                     <div class="bg-white/20 backdrop-blur-sm p-4 rounded-xl">
@@ -118,26 +109,24 @@
                 </div>
                 <div class="flex items-center text-xs text-indigo-100">
                     <i class="fas fa-hourglass-half mr-2"></i>
-                    <span>Pending role assignment</span>
+                    <span>Warten auf Rollenzuweisung</span>
                 </div>
             </div>
 
         </div>
 
-        <!-- Tenant Information Card -->
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center">
                     <i class="fas fa-info-circle text-indigo-600 mr-3 text-2xl"></i>
-                    Tenant Information
+                    Mandanten-Informationen
                 </h3>
                 <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
-                    <i class="fas fa-check-circle mr-1"></i>Active
+                    <i class="fas fa-check-circle mr-1"></i>Aktiv
                 </span>
             </div>
             
             <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Subdomain -->
                 <div class="flex items-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
                     <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-globe text-white text-xl"></i>
@@ -148,7 +137,6 @@
                     </div>
                 </div>
 
-                <!-- Admin Name -->
                 <div class="flex items-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
                     <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-user-shield text-white text-xl"></i>
@@ -159,46 +147,43 @@
                     </div>
                 </div>
 
-                <!-- Admin Email -->
                 <div class="flex items-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                     <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-envelope text-white text-xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-purple-600 font-medium uppercase tracking-wide">Email</p>
+                        <p class="text-xs text-purple-600 font-medium uppercase tracking-wide">E-Mail</p>
                         <p class="text-sm font-bold text-gray-900 mt-1 truncate">{{ $tenant->admin_email }}</p>
                     </div>
                 </div>
 
-                <!-- Expiry Date -->
-                <div class="flex items-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                <div class="flex items-center p-4 bg- gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                     <div class="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center mr-4">
                         <i class="fas fa-calendar-alt text-white text-xl"></i>
                     </div>
                     <div>
-                        <p class="text-xs text-orange-600 font-medium uppercase tracking-wide">Expires</p>
+                        <p class="text-xs text-orange-600 font-medium uppercase tracking-wide">Läuft ab am</p>
                         <p class="text-sm font-bold text-gray-900 mt-1">
-                            {{ $tenant->expires_at ? $tenant->expires_at->format('M d, Y') : 'Never' }}
+                            {{ $tenant->expires_at ? $tenant->expires_at->format('d.m.Y') : 'Unbegrenzt' }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Package Info -->
             <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <i class="fas fa-box text-indigo-600 text-lg mr-3"></i>
                         <div>
-                            <p class="text-xs text-gray-500">Package</p>
+                            <p class="text-xs text-gray-500">Paket</p>
                             <p class="font-semibold text-gray-900">{{ $tenant->package_name }}</p>
                         </div>
                     </div>
                     @if($tenant->expires_at)
                         <div class="text-right">
-                            <p class="text-xs text-gray-500">Days Remaining</p>
+                            <p class="text-xs text-gray-500">Verbleibende Tage</p>
                             <p class="font-semibold text-orange-600">
-                                {{ $tenant->expires_at->diffInDays(now()) }} days
+                                Noch {{ $tenant->expires_at->diffInDays(now()) }} Tage
                             </p>
                         </div>
                     @endif
@@ -206,15 +191,14 @@
             </div>
         </div>
 
-        <!-- Team Members Section -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <div class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-between">
                 <h3 class="text-xl font-bold text-white flex items-center">
                     <i class="fas fa-users-cog mr-3"></i>
-                    Team Members Management
+                    Teammitglieder-Verwaltung
                 </h3>
                 <button class="px-4 py-2 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-gray-100 transition">
-                    <i class="fas fa-plus mr-2"></i>Add Member
+                    <i class="fas fa-plus mr-2"></i>Mitglied hinzufügen
                 </button>
             </div>
             
@@ -224,26 +208,25 @@
                         <thead>
                             <tr class="bg-gray-50">
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    User
+                                    Benutzer
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Email
+                                    E-Mail
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Role
+                                    Rolle
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Joined
+                                    Beigetreten
                                 </th>
                                 <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Actions
+                                    Aktionen
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($recentUsers as $member)
                                 <tr class="hover:bg-gray-50 transition">
-                                    <!-- User Avatar & Name -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white
@@ -259,44 +242,48 @@
                                                     {{ $member->name }}
                                                 </div>
                                                 @if($member->id === $user->id)
-                                                    <div class="text-xs text-gray-500">(You)</div>
+                                                    <div class="text-xs text-gray-500">(Sie)</div>
                                                 @endif
                                             </div>
                                         </div>
                                     </td>
 
-                                    <!-- Email -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">{{ $member->email }}</div>
                                     </td>
 
-                                    <!-- Role Badge -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-3 py-1 text-xs font-semibold rounded-full inline-flex items-center {{ $member->getRoleBadgeClass() }}">
                                             <i class="fas {{ $member->getRoleIcon() }} mr-1"></i>
-                                            {{ ucfirst(str_replace('-', ' ', $member->role)) }}
+                                            @php
+                                                $deRole = [
+                                                    'admin' => 'Administrator',
+                                                    'developer' => 'Entwickler',
+                                                    'work-bee' => 'Work-Bee',
+                                                    'standard' => 'Standard'
+                                                ][$member->role] ?? $member->role;
+                                            @endphp
+                                            {{ $deRole }}
                                         </span>
                                     </td>
 
-                                    <!-- Join Date -->
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div class="flex items-center">
                                             <i class="fas fa-calendar text-gray-400 mr-2"></i>
-                                            {{ $member->created_at->format('M d, Y') }}
+                                            {{ $member->created_at->format('d.m.Y') }}
                                         </div>
                                         <div class="text-xs text-gray-400">
-                                            {{ $member->created_at->diffForHumans() }}
+                                            vor {{ $member->created_at->diffForHumans(null, true) }}
                                         </div>
                                     </td>
 
-                                    <!-- Actions -->
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex justify-end space-x-2">
-                                            <button class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded transition">
+                                            <button class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded transition" title="Bearbeiten">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             @if($member->id !== $user->id)
-                                                <button class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition">
+                                                <button class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded transition" title="Löschen">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
@@ -308,8 +295,8 @@
                                     <td colspan="5" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center">
                                             <i class="fas fa-users text-gray-300 text-5xl mb-4"></i>
-                                            <p class="text-gray-500 text-lg font-medium">No team members yet</p>
-                                            <p class="text-gray-400 text-sm mt-1">Start by inviting your first team member</p>
+                                            <p class="text-gray-500 text-lg font-medium">Noch keine Teammitglieder</p>
+                                            <p class="text-gray-400 text-sm mt-1">Laden Sie Ihr erstes Teammitglied ein</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -320,24 +307,20 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
-       
-
     </div>
 
-    <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="flex items-center justify-between">
                 <p class="text-sm text-gray-500">
-                    © {{ date('Y') }} {{ $tenant->subdomain }} • Innovation Pipeline
+                    © {{ date('Y') }} {{ $tenant->subdomain }} • Ideenpipeline
                 </p>
                 <div class="flex items-center space-x-4 text-sm text-gray-500">
-                    <a href="#" class="hover:text-indigo-600">Help</a>
+                    <a href="#" class="hover:text-indigo-600">Hilfe</a>
                     <span>•</span>
                     <a href="#" class="hover:text-indigo-600">Support</a>
                     <span>•</span>
-                    <a href="#" class="hover:text-indigo-600">Documentation</a>
+                    <a href="#" class="hover:text-indigo-600">Dokumentation</a>
                 </div>
             </div>
         </div>
